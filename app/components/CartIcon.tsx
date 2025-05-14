@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 
 export default function CartIcon() {

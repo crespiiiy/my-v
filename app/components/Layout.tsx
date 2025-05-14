@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import Logo from "./Logo";
 import CartIcon from "./CartIcon";
