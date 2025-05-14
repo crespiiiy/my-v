@@ -5,13 +5,23 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "react-router";
+} from "react-router-dom";
 
-import type { Route } from "./+types/root";
 import "./app.css";
 import SiteLayout from "./components/Layout";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
+
+// Define Route types inline since +types directory doesn't exist
+namespace Route {
+  export interface LinksFunction {
+    (): Array<{ rel: string; href: string; crossOrigin?: string }>;
+  }
+  
+  export interface ErrorBoundaryProps {
+    error: unknown;
+  }
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -47,6 +57,7 @@ export const DocumentHydrationFix = () => {
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  console.log('Rendering Layout component');
   return (
     <html lang="en" className="dark">
       <head>
@@ -70,6 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  console.log('Rendering App component');
   return (
     <SiteLayout>
       <Outlet />
@@ -78,6 +90,8 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  console.error('Root ErrorBoundary caught an error:', error);
+  
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
@@ -88,9 +102,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       error.status === 404
         ? "The requested page could not be found."
         : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
+    console.error(`Route error: ${error.status} - ${error.statusText || 'Unknown error'}`);
+  } else if (error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
+    console.error('Error details:', error.message, error.stack);
   }
 
   return (
@@ -98,10 +114,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full p-4 overflow-x-auto text-sm text-gray-400 bg-gray-800 rounded">
           <code>{stack}</code>
         </pre>
       )}
+      <button 
+        onClick={() => window.location.href = '/'}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Go to Home Page
+      </button>
     </main>
   );
 }
