@@ -1,5 +1,6 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * دالة لإنشاء معرف فريد بدون استخدام مكتبة uuid
@@ -24,8 +25,8 @@ export const uploadFile = async (
   customFileName?: string
 ): Promise<string> => {
   try {
-    // إنشاء اسم فريد للملف باستخدام توليد معرف فريد إذا لم يتم تقديم اسم مخصص
-    const fileName = customFileName || `${generateUniqueId()}-${file.name}`;
+    // إنشاء اسم فريد للملف باستخدام UUID إذا لم يتم تقديم اسم مخصص
+    const fileName = customFileName || `${uuidv4()}-${file.name}`;
     // إنشاء المرجع الكامل للملف
     const fullPath = `${path}/${fileName}`;
     const fileRef = ref(storage, fullPath);
