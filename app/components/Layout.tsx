@@ -70,6 +70,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Link to="/account" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">
                       My Account
                     </Link>
+                    <Link to="/wishlist" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">
+                      My Wishlist
+                    </Link>
                     <Link to="/account/orders" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">
                       Orders
                     </Link>
@@ -149,6 +152,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     My Account
+                  </Link>
+                  <Link 
+                    to="/wishlist" 
+                    className="transition-colors hover:text-blue-400"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    My Wishlist
                   </Link>
                   <Link 
                     to="/account/orders" 

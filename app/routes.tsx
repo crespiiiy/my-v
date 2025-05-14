@@ -86,6 +86,7 @@ const rootRoute = {
     createRoute("store", "routes/store"),
     createRoute("store/:productId", "routes/store/product"),
     createRoute("cart", "routes/cart"),
+    createRoute("wishlist", "routes/wishlist"),
     createRoute("checkout", "routes/checkout"),
     createRoute("checkout/success", "routes/checkout/success"),
     

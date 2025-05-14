@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import '../app/app.css';
 import { AuthProvider } from '../app/contexts/AuthContext';
 import { CartProvider } from '../app/contexts/CartContext';
+import { WishlistProvider } from '../app/contexts/WishlistContext';
 
 // Import your routes configuration
 console.log('Importing routes...');
@@ -25,7 +26,9 @@ if (!rootElement) {
     <React.StrictMode>
       <AuthProvider>
         <CartProvider>
-          <RouterProvider router={router} />
+          <WishlistProvider>
+            <RouterProvider router={router} />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </React.StrictMode>

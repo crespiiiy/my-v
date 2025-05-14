@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import type { Product } from "../models/product";
 import { useCart } from "../contexts/CartContext";
+import WishlistButton from "./WishlistButton";
 
 interface ProductCardProps {
   product: Product;
@@ -34,6 +35,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             Featured
           </div>
         )}
+        
+        {/* Wishlist Button */}
+        <div className="absolute bottom-2 right-2">
+          <WishlistButton product={product} size="sm" />
+        </div>
       </div>
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">

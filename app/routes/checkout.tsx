@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/checkout";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import { processOrderSecurity } from "../services/security";
+import SecurityBadges from "../components/SecurityBadges";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,6 +15,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Checkout() {
   const { cart, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -32,6 +36,7 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shippingMethod, setShippingMethod] = useState("standard");
+  const [sameAsShipping, setSameAsShipping] = useState(true);
   
   // Calculate shipping cost based on selected method
   const shippingCost = 
@@ -105,22 +110,73 @@ export default function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
     setIsSubmitting(true);
     
-    // Simulate order processing
-    setTimeout(() => {
+    try {
+      // Create order data object
+      const orderData = {
+        userId: user?.id || 'guest',
+        items: cart.items.map(item => ({
+          productId: item.product.id,
+          price: item.product.price,
+          quantity: item.quantity
+        })),
+        shippingAddress: {
+          country: formData.country,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          street: formData.address
+        },
+        billingAddress: sameAsShipping ? undefined : {
+          country: formData.country,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          street: formData.address
+        },
+        paymentMethod: {
+          type: formData.paymentMethod as 'credit_card' | 'paypal' | 'bank_transfer',
+          cardInfo: formData.paymentMethod === 'credit_card' ? {
+            lastFourDigits: formData.cardNumber.slice(-4),
+            bin: formData.cardNumber.slice(0, 6)
+          } : undefined
+        },
+        ipAddress: '192.168.1.1', // In a real app, this would be the user's IP
+        userAgent: navigator.userAgent,
+        orderTimestamp: new Date().toISOString()
+      };
+      
+      // Check for fraud
+      const securityCheck = processOrderSecurity(orderData);
+      
+      if (!securityCheck.approved) {
+        if (securityCheck.result.risk === 'high') {
+          setErrors({
+            form: "We're sorry, but we cannot process your order at this time. Please contact customer support."
+          });
+          setIsSubmitting(false);
+          return;
+        } else {
+          // For medium risk, we continue but flag for manual review
+          console.log('Order flagged for manual review:', securityCheck.result.reasons);
+        }
+      }
+      
       // Clear the cart
       clearCart();
       // Redirect to success page
       navigate("/checkout/success", { state: { orderId: generateOrderId() } });
-    }, 1500);
+    } catch (error) {
+      console.error("Error processing order:", error);
+      setErrors({
+        form: "An error occurred while processing your order. Please try again later."
+      });
+      setIsSubmitting(false);
+    }
   };
   
   // Generate a random order ID
@@ -401,127 +457,121 @@ export default function Checkout() {
             {/* Payment Information */}
             <div className="bg-gray-800 rounded-lg p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
-              <div className="mb-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="radio"
-                    id="payment-credit"
-                    name="paymentMethod"
-                    value="credit"
-                    checked={formData.paymentMethod === "credit"}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  <label htmlFor="payment-credit">Credit / Debit Card</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="payment-paypal"
-                    name="paymentMethod"
-                    value="paypal"
-                    checked={formData.paymentMethod === "paypal"}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  <label htmlFor="payment-paypal">PayPal</label>
+              
+              <div className="mb-6">
+                <div className="flex flex-col space-y-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="credit"
+                      checked={formData.paymentMethod === "credit"}
+                      onChange={handleChange}
+                      className="mr-3"
+                    />
+                    <span>Credit Card</span>
+                  </label>
+                  
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="paypal"
+                      checked={formData.paymentMethod === "paypal"}
+                      onChange={handleChange}
+                      className="mr-3"
+                    />
+                    <span>PayPal</span>
+                  </label>
                 </div>
               </div>
               
               {formData.paymentMethod === "credit" && (
-                <div className="bg-gray-750 p-4 rounded-md">
-                  <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="cardName" className="block text-sm font-medium mb-2">
+                      Name on Card *
+                    </label>
+                    <input
+                      type="text"
+                      id="cardName"
+                      name="cardName"
+                      value={formData.cardName}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 bg-gray-700 border ${
+                        errors.cardName ? "border-red-500" : "border-gray-600"
+                      } rounded-md text-white`}
+                    />
+                    {errors.cardName && (
+                      <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="cardNumber" className="block text-sm font-medium mb-2">
+                      Card Number *
+                    </label>
+                    <input
+                      type="text"
+                      id="cardNumber"
+                      name="cardNumber"
+                      value={formData.cardNumber}
+                      onChange={handleChange}
+                      placeholder="XXXX XXXX XXXX XXXX"
+                      className={`w-full px-4 py-2 bg-gray-700 border ${
+                        errors.cardNumber ? "border-red-500" : "border-gray-600"
+                      } rounded-md text-white`}
+                    />
+                    {errors.cardNumber && (
+                      <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="cardName" className="block text-sm font-medium mb-2">
-                        Name on Card *
+                      <label htmlFor="cardExpiry" className="block text-sm font-medium mb-2">
+                        Expiration Date (MM/YY) *
                       </label>
                       <input
                         type="text"
-                        id="cardName"
-                        name="cardName"
-                        value={formData.cardName}
+                        id="cardExpiry"
+                        name="cardExpiry"
+                        value={formData.cardExpiry}
                         onChange={handleChange}
+                        placeholder="MM/YY"
                         className={`w-full px-4 py-2 bg-gray-700 border ${
-                          errors.cardName ? "border-red-500" : "border-gray-600"
+                          errors.cardExpiry ? "border-red-500" : "border-gray-600"
                         } rounded-md text-white`}
                       />
-                      {errors.cardName && (
-                        <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>
+                      {errors.cardExpiry && (
+                        <p className="mt-1 text-sm text-red-500">{errors.cardExpiry}</p>
                       )}
                     </div>
                     <div>
-                      <label htmlFor="cardNumber" className="block text-sm font-medium mb-2">
-                        Card Number *
+                      <label htmlFor="cardCVV" className="block text-sm font-medium mb-2">
+                        Security Code (CVV) *
                       </label>
                       <input
                         type="text"
-                        id="cardNumber"
-                        name="cardNumber"
-                        value={formData.cardNumber}
+                        id="cardCVV"
+                        name="cardCVV"
+                        value={formData.cardCVV}
                         onChange={handleChange}
-                        placeholder="XXXX XXXX XXXX XXXX"
+                        placeholder="XXX"
                         className={`w-full px-4 py-2 bg-gray-700 border ${
-                          errors.cardNumber ? "border-red-500" : "border-gray-600"
+                          errors.cardCVV ? "border-red-500" : "border-gray-600"
                         } rounded-md text-white`}
                       />
-                      {errors.cardNumber && (
-                        <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>
+                      {errors.cardCVV && (
+                        <p className="mt-1 text-sm text-red-500">{errors.cardCVV}</p>
                       )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="cardExpiry" className="block text-sm font-medium mb-2">
-                          Expiration Date (MM/YY) *
-                        </label>
-                        <input
-                          type="text"
-                          id="cardExpiry"
-                          name="cardExpiry"
-                          value={formData.cardExpiry}
-                          onChange={handleChange}
-                          placeholder="MM/YY"
-                          className={`w-full px-4 py-2 bg-gray-700 border ${
-                            errors.cardExpiry ? "border-red-500" : "border-gray-600"
-                          } rounded-md text-white`}
-                        />
-                        {errors.cardExpiry && (
-                          <p className="mt-1 text-sm text-red-500">{errors.cardExpiry}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label htmlFor="cardCVV" className="block text-sm font-medium mb-2">
-                          Security Code (CVV) *
-                        </label>
-                        <input
-                          type="text"
-                          id="cardCVV"
-                          name="cardCVV"
-                          value={formData.cardCVV}
-                          onChange={handleChange}
-                          placeholder="XXX"
-                          className={`w-full px-4 py-2 bg-gray-700 border ${
-                            errors.cardCVV ? "border-red-500" : "border-gray-600"
-                          } rounded-md text-white`}
-                        />
-                        {errors.cardCVV && (
-                          <p className="mt-1 text-sm text-red-500">{errors.cardCVV}</p>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
               )}
               
-              {formData.paymentMethod === "paypal" && (
-                <div className="bg-gray-750 p-4 rounded-md text-center">
-                  <p className="mb-4">You will be redirected to PayPal to complete your payment after reviewing your order.</p>
-                  <img 
-                    src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" 
-                    alt="PayPal" 
-                    className="h-10 mx-auto"
-                  />
-                </div>
-              )}
+              {/* Security Badges */}
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <SecurityBadges variant="horizontal" size="md" />
+              </div>
             </div>
             
             <div className="flex justify-between mt-8 space-x-4">

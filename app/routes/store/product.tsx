@@ -2,8 +2,14 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/product";
 import { getProductById, getProductsByCategory } from "../../models/product";
+import { getAverageRating, getReviewsCount } from "../../models/review";
 import { useCart } from "../../contexts/CartContext";
 import ProductCard from "../../components/ProductCard";
+import ReviewsList from "../../components/ReviewsList";
+import ReviewForm from "../../components/ReviewForm";
+import StarRating from "../../components/StarRating";
+import { useAuth } from "../../contexts/AuthContext";
+import SecurityBadges from "../../components/SecurityBadges";
 
 export function meta({ params }: Route.MetaArgs) {
   const product = getProductById(params.productId);
@@ -25,10 +31,17 @@ export default function ProductDetail() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { isLoggedIn } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
   
   const product = productId ? getProductById(productId) : undefined;
+  
+  // Get product average rating and review count
+  const averageRating = productId ? getAverageRating(productId) : 0;
+  const reviewsCount = productId ? getReviewsCount(productId) : 0;
   
   if (!product) {
     return (
@@ -59,7 +72,17 @@ export default function ProductDetail() {
   
   const handleAddToCart = () => {
     addItem(product, quantity);
-    // Show success message or navigate to cart
+    
+    // Show success notification
+    const successMessage = document.createElement('div');
+    successMessage.className = 'fixed top-4 right-4 bg-green-700 text-white px-4 py-3 rounded shadow-lg z-50 animate-fadeOut';
+    successMessage.innerText = `${product.name} added to cart!`;
+    document.body.appendChild(successMessage);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      document.body.removeChild(successMessage);
+    }, 3000);
   };
   
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +90,22 @@ export default function ProductDetail() {
     if (value > 0 && value <= product.stockQuantity) {
       setQuantity(value);
     }
+  };
+  
+  const handleReviewSubmit = () => {
+    setShowReviewForm(false);
+    setReviewSubmitted(true);
+    
+    // Show success message
+    const successMessage = document.createElement('div');
+    successMessage.className = 'fixed top-4 right-4 bg-green-700 text-white px-4 py-3 rounded shadow-lg z-50 animate-fadeOut';
+    successMessage.innerText = 'Thank you! Your review has been submitted.';
+    document.body.appendChild(successMessage);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      document.body.removeChild(successMessage);
+    }, 3000);
   };
 
   return (
@@ -121,6 +160,14 @@ export default function ProductDetail() {
         {/* Product Info */}
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          
+          {/* Ratings Summary */}
+          <div className="flex items-center mb-4">
+            <StarRating rating={averageRating} size="sm" showValue={true} />
+            <span className="ml-2 text-gray-400">
+              ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})
+            </span>
+          </div>
           
           <div className="flex items-center mb-4">
             {hasDiscount ? (
@@ -200,7 +247,56 @@ export default function ProductDetail() {
               </li>
             </ul>
           </div>
+          
+          {/* Secure Shopping Badges */}
+          <div className="mt-6 flex flex-wrap gap-4">
+            <div className="flex items-center text-gray-400 text-sm">
+              <svg className="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Secure Transaction
+            </div>
+            <div className="flex items-center text-gray-400 text-sm">
+              <svg className="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              SSL Encrypted
+            </div>
+            <div className="flex items-center text-gray-400 text-sm">
+              <svg className="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              Visa/MC/PayPal
+            </div>
+          </div>
         </div>
+      </div>
+      
+      {/* Reviews Section */}
+      <div className="mb-16">
+        <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+        
+        {showReviewForm ? (
+          <ReviewForm 
+            productId={product.id} 
+            onReviewSubmit={handleReviewSubmit}
+            onCancel={() => setShowReviewForm(false)}
+          />
+        ) : (
+          <>
+            {isLoggedIn && !reviewSubmitted && (
+              <div className="mb-6 text-center">
+                <button 
+                  onClick={() => setShowReviewForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+                >
+                  Write a Review
+                </button>
+              </div>
+            )}
+            <ReviewsList productId={product.id} />
+          </>
+        )}
       </div>
       
       {/* Related Products */}
