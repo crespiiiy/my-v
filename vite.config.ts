@@ -12,7 +12,16 @@ export default defineConfig({
     // This is useful for CI/CD environments
     reportCompressedSize: false, // Speed up build
     sourcemap: false, // Speed up build
+    minify: 'terser', // Use terser instead of esbuild for better compatibility
+    terserOptions: {
+      compress: {
+        // Disable features that might cause issues
+        keep_infinity: true,
+        passes: 1
+      }
+    },
     rollupOptions: {
+      external: [], // Don't externalize any dependencies
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
