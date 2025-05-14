@@ -79,7 +79,7 @@ export const storeSettings: StoreSetting[] = [
   {
     id: "8",
     key: "favicon_url",
-    value: "/images/favicon.ico",
+    value: "/favicon.ico",
     category: "appearance",
     isSystem: true,
     createdAt: "2023-01-01T00:00:00Z",
@@ -188,7 +188,7 @@ export const storeSettings: StoreSetting[] = [
   {
     id: "19",
     key: "hero_image_url",
-    value: "https://placehold.co/800x600/111827/ffffff?text=Creative+Tools",
+    value: "/images/hero.jpg",
     category: "homepage",
     isSystem: false,
     createdAt: "2023-01-01T00:00:00Z",
