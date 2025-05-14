@@ -461,26 +461,26 @@ export default function Checkout() {
               <div className="mb-6">
                 <div className="flex flex-col space-y-4">
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="credit"
-                      checked={formData.paymentMethod === "credit"}
-                      onChange={handleChange}
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="credit"
+                    checked={formData.paymentMethod === "credit"}
+                    onChange={handleChange}
                       className="mr-3"
-                    />
+                  />
                     <span>Credit Card</span>
                   </label>
                   
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="paypal"
-                      checked={formData.paymentMethod === "paypal"}
-                      onChange={handleChange}
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="paypal"
+                    checked={formData.paymentMethod === "paypal"}
+                    onChange={handleChange}
                       className="mr-3"
-                    />
+                  />
                     <span>PayPal</span>
                   </label>
                 </div>
@@ -488,81 +488,81 @@ export default function Checkout() {
               
               {formData.paymentMethod === "credit" && (
                 <div className="space-y-4">
-                  <div>
-                    <label htmlFor="cardName" className="block text-sm font-medium mb-2">
-                      Name on Card *
-                    </label>
-                    <input
-                      type="text"
-                      id="cardName"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 bg-gray-700 border ${
-                        errors.cardName ? "border-red-500" : "border-gray-600"
-                      } rounded-md text-white`}
-                    />
-                    {errors.cardName && (
-                      <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="cardNumber" className="block text-sm font-medium mb-2">
-                      Card Number *
-                    </label>
-                    <input
-                      type="text"
-                      id="cardNumber"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleChange}
-                      placeholder="XXXX XXXX XXXX XXXX"
-                      className={`w-full px-4 py-2 bg-gray-700 border ${
-                        errors.cardNumber ? "border-red-500" : "border-gray-600"
-                      } rounded-md text-white`}
-                    />
-                    {errors.cardNumber && (
-                      <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="cardExpiry" className="block text-sm font-medium mb-2">
-                        Expiration Date (MM/YY) *
+                      <label htmlFor="cardName" className="block text-sm font-medium mb-2">
+                        Name on Card *
                       </label>
                       <input
                         type="text"
-                        id="cardExpiry"
-                        name="cardExpiry"
-                        value={formData.cardExpiry}
+                        id="cardName"
+                        name="cardName"
+                        value={formData.cardName}
                         onChange={handleChange}
-                        placeholder="MM/YY"
                         className={`w-full px-4 py-2 bg-gray-700 border ${
-                          errors.cardExpiry ? "border-red-500" : "border-gray-600"
+                          errors.cardName ? "border-red-500" : "border-gray-600"
                         } rounded-md text-white`}
                       />
-                      {errors.cardExpiry && (
-                        <p className="mt-1 text-sm text-red-500">{errors.cardExpiry}</p>
+                      {errors.cardName && (
+                        <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>
                       )}
                     </div>
                     <div>
-                      <label htmlFor="cardCVV" className="block text-sm font-medium mb-2">
-                        Security Code (CVV) *
+                      <label htmlFor="cardNumber" className="block text-sm font-medium mb-2">
+                        Card Number *
                       </label>
                       <input
                         type="text"
-                        id="cardCVV"
-                        name="cardCVV"
-                        value={formData.cardCVV}
+                        id="cardNumber"
+                        name="cardNumber"
+                        value={formData.cardNumber}
                         onChange={handleChange}
-                        placeholder="XXX"
+                        placeholder="XXXX XXXX XXXX XXXX"
                         className={`w-full px-4 py-2 bg-gray-700 border ${
-                          errors.cardCVV ? "border-red-500" : "border-gray-600"
+                          errors.cardNumber ? "border-red-500" : "border-gray-600"
                         } rounded-md text-white`}
                       />
-                      {errors.cardCVV && (
-                        <p className="mt-1 text-sm text-red-500">{errors.cardCVV}</p>
+                      {errors.cardNumber && (
+                        <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>
                       )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="cardExpiry" className="block text-sm font-medium mb-2">
+                          Expiration Date (MM/YY) *
+                        </label>
+                        <input
+                          type="text"
+                          id="cardExpiry"
+                          name="cardExpiry"
+                          value={formData.cardExpiry}
+                          onChange={handleChange}
+                          placeholder="MM/YY"
+                          className={`w-full px-4 py-2 bg-gray-700 border ${
+                            errors.cardExpiry ? "border-red-500" : "border-gray-600"
+                          } rounded-md text-white`}
+                        />
+                        {errors.cardExpiry && (
+                          <p className="mt-1 text-sm text-red-500">{errors.cardExpiry}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor="cardCVV" className="block text-sm font-medium mb-2">
+                          Security Code (CVV) *
+                        </label>
+                        <input
+                          type="text"
+                          id="cardCVV"
+                          name="cardCVV"
+                          value={formData.cardCVV}
+                          onChange={handleChange}
+                          placeholder="XXX"
+                          className={`w-full px-4 py-2 bg-gray-700 border ${
+                            errors.cardCVV ? "border-red-500" : "border-gray-600"
+                          } rounded-md text-white`}
+                        />
+                        {errors.cardCVV && (
+                          <p className="mt-1 text-sm text-red-500">{errors.cardCVV}</p>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -571,7 +571,7 @@ export default function Checkout() {
               {/* Security Badges */}
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <SecurityBadges variant="horizontal" size="md" />
-              </div>
+                </div>
             </div>
             
             <div className="flex justify-between mt-8 space-x-4">

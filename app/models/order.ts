@@ -7,11 +7,11 @@ export interface OrderItem {
 }
 
 export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -63,12 +63,12 @@ export const orders: Order[] = [
       }
     ],
     shippingAddress: {
-      street: "123 Main St",
-      city: "Brooklyn",
-      state: "NY",
-      zipCode: "11201",
-      country: "United States"
-    },
+        street: "123 Main St",
+        city: "Brooklyn",
+        state: "NY",
+        zipCode: "11201",
+        country: "United States"
+      },
     billingAddress: {
       street: "123 Main St",
       city: "Brooklyn",
@@ -108,7 +108,7 @@ export const orders: Order[] = [
       state: "WA",
       zipCode: "98101",
       country: "United States"
-    },
+        },
     billingAddress: {
       street: "456 Oak Ave",
       city: "Seattle",
@@ -149,12 +149,12 @@ export const orders: Order[] = [
       }
     ],
     shippingAddress: {
-      street: "123 Main St",
-      city: "Brooklyn",
-      state: "NY",
-      zipCode: "11201",
-      country: "United States"
-    },
+        street: "123 Main St",
+        city: "Brooklyn",
+        state: "NY",
+        zipCode: "11201",
+        country: "United States"
+      },
     billingAddress: {
       street: "123 Main St",
       city: "Brooklyn",
@@ -193,8 +193,8 @@ export const orders: Order[] = [
       city: "San Francisco",
       state: "CA",
       zipCode: "94101",
-      country: "United States"
-    },
+        country: "United States"
+      },
     billingAddress: {
       street: "789 Pine St",
       city: "San Francisco",
