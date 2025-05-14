@@ -186,7 +186,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Phone</h3>
-                  <p className="text-gray-400">+1 (555) 123-4567</p>
+                  <p className="text-gray-400">+20 1259493602</p>
                 </div>
               </div>
               <div className="flex items-start">
@@ -210,9 +210,7 @@ export default function Contact() {
                 <div>
                   <h3 className="font-semibold mb-1">Address</h3>
                   <p className="text-gray-400">
-                    123 Creative St<br />
-                    Design City, DC 10001<br />
-                    United States
+                    Cairo, Egypt
                   </p>
                 </div>
               </div>
