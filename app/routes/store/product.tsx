@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/product";
 import { getProductById, getProductsByCategory } from "../../models/product";
 import { useCart } from "../../contexts/CartContext";

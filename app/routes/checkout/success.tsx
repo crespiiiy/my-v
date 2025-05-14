@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import type { Route } from "../+types/checkout/success";
 
 export function meta({}: Route.MetaArgs) {

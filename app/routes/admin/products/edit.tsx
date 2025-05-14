@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/edit";
 import { getProductById, getAllCategories } from "../../../models/product";
 

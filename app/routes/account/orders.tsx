@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import type { Route } from "../+types/account/orders";
 import { useAuth } from "../../contexts/AuthContext";
 import { getUserOrders } from "../../models/order";

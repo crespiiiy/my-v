@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import type { Route } from "./+types/home";
 import { getFeaturedProducts } from "../models/product";
 import { getHomepageSettings, getSettingValue } from "../models/settings";
