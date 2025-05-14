@@ -1,30 +1,51 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import type { RouteObject } from "react-router-dom";
 
-export default [
-  index("routes/home.tsx"),
-  route("services", "routes/services.tsx"),
-  route("bio", "routes/bio.tsx"),
-  route("contact", "routes/contact.tsx"),
-  route("store", "routes/store.tsx"),
-  route("store/:productId", "routes/store/product.tsx"),
-  route("cart", "routes/cart.tsx"),
-  route("checkout", "routes/checkout.tsx"),
-  route("checkout/success", "routes/checkout/success.tsx"),
-  
-  // Authentication routes
-  route("login", "routes/login.tsx"),
-  route("register", "routes/register.tsx"),
-  
-  // Account routes
-  route("account", "routes/account/index.tsx"),
-  route("account/orders", "routes/account/orders.tsx"),
-  
-  // Admin routes
-  route("admin", "routes/admin/index.tsx"),
-  route("admin/products", "routes/admin/products.tsx"),
-  route("admin/products/new", "routes/admin/products/new.tsx"),
-  route("admin/products/:productId", "routes/admin/products/edit.tsx"),
-  route("admin/orders", "routes/admin/orders.tsx"),
-  route("admin/customers", "routes/admin/customers.tsx"),
-  route("admin/settings", "routes/admin/settings.tsx"),
-] satisfies RouteConfig;
+// Helper function to create route objects with component import
+const createRoute = (path: string, componentPath: string): RouteObject => ({
+  path,
+  async lazy() {
+    // Dynamic import of the component
+    const module = await import(`./${componentPath}`);
+    return { Component: module.default };
+  }
+});
+
+const routes: RouteObject[] = [
+  { 
+    path: "/", 
+    async lazy() {
+      const module = await import("./root");
+      return { Component: module.default };
+    },
+    children: [
+      createRoute("", "routes/home"),
+      createRoute("services", "routes/services"),
+      createRoute("bio", "routes/bio"),
+      createRoute("contact", "routes/contact"),
+      createRoute("store", "routes/store"),
+      createRoute("store/:productId", "routes/store/product"),
+      createRoute("cart", "routes/cart"),
+      createRoute("checkout", "routes/checkout"),
+      createRoute("checkout/success", "routes/checkout/success"),
+      
+      // Authentication routes
+      createRoute("login", "routes/login"),
+      createRoute("register", "routes/register"),
+      
+      // Account routes
+      createRoute("account", "routes/account/index"),
+      createRoute("account/orders", "routes/account/orders"),
+      
+      // Admin routes
+      createRoute("admin", "routes/admin/index"),
+      createRoute("admin/products", "routes/admin/products"),
+      createRoute("admin/products/new", "routes/admin/products/new"),
+      createRoute("admin/products/:productId", "routes/admin/products/edit"),
+      createRoute("admin/orders", "routes/admin/orders"),
+      createRoute("admin/customers", "routes/admin/customers"),
+      createRoute("admin/settings", "routes/admin/settings"),
+    ]
+  }
+];
+
+export default routes;
