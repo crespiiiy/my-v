@@ -21,6 +21,8 @@ jobs:
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Creative Store</title>
+              <link rel="icon" href="/favicon.ico" type="image/x-icon">
+              <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
               <style>
                 body {
                   font-family: Arial, sans-serif;
@@ -73,6 +75,9 @@ jobs:
             </body>
           </html>
           EOL
+      
+      - name: Download favicon
+        run: curl -o build/favicon.ico https://raw.githubusercontent.com/crespiiiy/my-v/main/public/favicon.ico || curl -o build/favicon.ico https://www.google.com/favicon.ico
       
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
