@@ -9,8 +9,6 @@ import {
 
 import "./app.css";
 import SiteLayout from "./components/Layout";
-import { CartProvider } from "./contexts/CartContext";
-import { AuthProvider } from "./contexts/AuthContext";
 
 // Define Route types inline since +types directory doesn't exist
 namespace Route {
@@ -68,11 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <DocumentHydrationFix />
       </head>
       <body>
-        <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
-        </AuthProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>

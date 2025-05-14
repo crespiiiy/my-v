@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import '../app/app.css';
+import { AuthProvider } from '../app/contexts/AuthContext';
+import { CartProvider } from '../app/contexts/CartContext';
 
 // Import your routes configuration
 console.log('Importing routes...');
@@ -21,7 +23,11 @@ if (!rootElement) {
 } else {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <CartProvider>
+          <RouterProvider router={router} />
+        </CartProvider>
+      </AuthProvider>
     </React.StrictMode>
   );
   console.log('React app initialized successfully');
