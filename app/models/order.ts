@@ -275,6 +275,11 @@ export function getOrdersByCustomerId(customerId: string): Order[] {
   return orders.filter(order => order.customerId === customerId);
 }
 
+// Added for compatibility with existing code
+export function getUserOrders(userId: string): Order[] {
+  return getOrdersByCustomerId(userId);
+}
+
 export function getOrdersByStatus(status: OrderStatus): Order[] {
   return orders.filter(order => order.orderStatus === status);
 }
