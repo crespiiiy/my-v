@@ -1,11 +1,11 @@
 import {
   isRouteErrorResponse,
-  Links,
-  Meta,
+  Link,
   Outlet,
-  Scripts,
   ScrollRestoration,
+  useRouteError
 } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 import "./app.css";
 import SiteLayout from "./components/Layout";
@@ -55,21 +55,25 @@ export const DocumentHydrationFix = () => {
   );
 };
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function RootLayout({ children }: { children: React.ReactNode }) {
   console.log('Rendering Layout component');
   return (
     <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
+        <Helmet>
+          <title>Creative - Creative Digital Products</title>
+          <meta name="description" content="Creative digital products for creative professionals" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+        </Helmet>
         <DocumentHydrationFix />
       </head>
       <body>
             {children}
         <ScrollRestoration />
-        <Scripts />
       </body>
     </html>
   );
@@ -88,7 +92,8 @@ export default function App() {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary() {
+  const error = useRouteError();
   console.error('Root ErrorBoundary caught an error:', error);
   
   let message = "Oops!";
@@ -117,12 +122,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <code>{stack}</code>
         </pre>
       )}
-      <button 
-        onClick={() => window.location.href = '/'}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      <Link
+        to="/"
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
       >
         Go to Home Page
-      </button>
+      </Link>
     </main>
   );
 }
