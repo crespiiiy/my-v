@@ -5,8 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Sign In - Creative" },
-    { name: "description", content: "Sign in to your Creative account" },
+    { title: "تسجيل الدخول - كرييتيف" },
+    { name: "description", content: "تسجيل الدخول إلى حسابك في كرييتيف" },
   ];
 }
 
@@ -15,7 +15,7 @@ export default function Login() {
   const location = useLocation();
   const { login } = useAuth();
   
-  // Get redirect URL from location state or default to home
+  // الحصول على عنوان URL للتوجيه من حالة الموقع أو التوجيه إلى الصفحة الرئيسية
   const from = location.state?.from?.pathname || "/";
   
   const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ export default function Login() {
     e.preventDefault();
     
     if (!formData.email.trim() || !formData.password.trim()) {
-      setError("Please enter both email and password");
+      setError("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
       return;
     }
     
@@ -47,10 +47,10 @@ export default function Login() {
       if (result.success) {
         navigate(from, { replace: true });
       } else {
-        setError(result.error || "Failed to sign in. Please try again.");
+        setError(result.error || "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.");
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError("حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsSubmitting(false);
     }
@@ -59,8 +59,8 @@ export default function Login() {
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-        <p className="text-gray-400">Sign in to your account</p>
+        <h1 className="text-3xl font-bold mb-2">مرحبًا بعودتك</h1>
+        <p className="text-gray-400">تسجيل الدخول إلى حسابك</p>
       </div>
       
       <div className="bg-gray-800 rounded-lg p-8">
@@ -73,7 +73,7 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email Address
+              البريد الإلكتروني
             </label>
             <input
               type="email"
@@ -83,19 +83,20 @@ export default function Login() {
               onChange={handleChange}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
               autoComplete="email"
+              dir="ltr"
             />
           </div>
           
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <label htmlFor="password" className="block text-sm font-medium">
-                Password
+                كلمة المرور
               </label>
               <Link
                 to="/forgot-password"
                 className="text-xs text-blue-400 hover:text-blue-300"
               >
-                Forgot Password?
+                نسيت كلمة المرور؟
               </Link>
             </div>
             <input
@@ -106,6 +107,7 @@ export default function Login() {
               onChange={handleChange}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
               autoComplete="current-password"
+              dir="ltr"
             />
           </div>
           
@@ -115,7 +117,7 @@ export default function Login() {
                 type="checkbox"
                 className="mr-2 rounded-sm"
               />
-              <span className="text-sm text-gray-300">Remember me</span>
+              <span className="text-sm text-gray-300">تذكرني</span>
             </label>
           </div>
           
@@ -130,19 +132,19 @@ export default function Login() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Signing In...
+                جاري تسجيل الدخول...
               </>
             ) : (
-              "Sign In"
+              "تسجيل الدخول"
             )}
           </button>
         </form>
         
         <div className="flex justify-center mt-8">
           <p className="text-gray-400">
-            Don't have an account?{" "}
+            ليس لديك حساب؟{" "}
             <Link to="/register" className="text-blue-400 hover:text-blue-300">
-              Sign Up
+              إنشاء حساب
             </Link>
           </p>
         </div>

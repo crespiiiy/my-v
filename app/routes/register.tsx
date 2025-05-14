@@ -5,8 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Sign Up - Creative" },
-    { name: "description", content: "Create a new Creative account" },
+    { title: "إنشاء حساب - كرييتيف" },
+    { name: "description", content: "إنشاء حساب جديد في كرييتيف" },
   ];
 }
 
@@ -28,7 +28,7 @@ export default function Register() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Clear error when field is edited
+    // إزالة الخطأ عند تعديل الحقل
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -42,27 +42,27 @@ export default function Register() {
     const newErrors: Record<string, string> = {};
     
     if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
+      newErrors.firstName = "الاسم الأول مطلوب";
     }
     
     if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
+      newErrors.lastName = "الاسم الأخير مطلوب";
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "البريد الإلكتروني مطلوب";
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "يرجى إدخال بريد إلكتروني صالح";
     }
     
     if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
+      newErrors.password = "كلمة المرور مطلوبة";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = "يجب أن تكون كلمة المرور 6 أحرف على الأقل";
     }
     
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "كلمات المرور غير متطابقة";
     }
     
     setErrors(newErrors);
@@ -89,10 +89,10 @@ export default function Register() {
       if (result.success) {
         navigate("/account");
       } else {
-        setErrors({ form: result.error || "Failed to create account. Please try again." });
+        setErrors({ form: result.error || "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى." });
       }
     } catch (err) {
-      setErrors({ form: "An unexpected error occurred. Please try again." });
+      setErrors({ form: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى." });
     } finally {
       setIsSubmitting(false);
     }
@@ -101,8 +101,8 @@ export default function Register() {
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create an Account</h1>
-        <p className="text-gray-400">Join the Creative community</p>
+        <h1 className="text-3xl font-bold mb-2">إنشاء حساب جديد</h1>
+        <p className="text-gray-400">انضم إلى مجتمع كرييتيف</p>
       </div>
       
       <div className="bg-gray-800 rounded-lg p-8">
@@ -116,7 +116,7 @@ export default function Register() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium mb-2">
-                First Name
+                الاسم الأول
               </label>
               <input
                 type="text"
@@ -136,7 +136,7 @@ export default function Register() {
             
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium mb-2">
-                Last Name
+                الاسم الأخير
               </label>
               <input
                 type="text"
@@ -157,7 +157,7 @@ export default function Register() {
           
           <div className="mb-6">
             <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email Address
+              البريد الإلكتروني
             </label>
             <input
               type="email"
@@ -169,6 +169,7 @@ export default function Register() {
                 errors.email ? "border-red-500" : "border-gray-600"
               } rounded-md text-white`}
               autoComplete="email"
+              dir="ltr"
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -177,7 +178,7 @@ export default function Register() {
           
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-medium mb-2">
-              Password
+              كلمة المرور
             </label>
             <input
               type="password"
@@ -189,6 +190,7 @@ export default function Register() {
                 errors.password ? "border-red-500" : "border-gray-600"
               } rounded-md text-white`}
               autoComplete="new-password"
+              dir="ltr"
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
@@ -197,7 +199,7 @@ export default function Register() {
           
           <div className="mb-8">
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-              Confirm Password
+              تأكيد كلمة المرور
             </label>
             <input
               type="password"
@@ -209,6 +211,7 @@ export default function Register() {
                 errors.confirmPassword ? "border-red-500" : "border-gray-600"
               } rounded-md text-white`}
               autoComplete="new-password"
+              dir="ltr"
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
@@ -226,19 +229,19 @@ export default function Register() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Creating Account...
+                جاري إنشاء الحساب...
               </>
             ) : (
-              "Create Account"
+              "إنشاء حساب"
             )}
           </button>
         </form>
         
         <div className="flex justify-center mt-8">
           <p className="text-gray-400">
-            Already have an account?{" "}
+            لديك حساب بالفعل؟{" "}
             <Link to="/login" className="text-blue-400 hover:text-blue-300">
-              Sign In
+              تسجيل الدخول
             </Link>
           </p>
         </div>

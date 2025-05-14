@@ -1,19 +1,23 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 import { 
-  getCurrentUser,
-  saveCurrentUser,
-  clearCurrentUser,
-  authenticateUser,
-  registerUser
-} from "../models/user";
-import type { User } from "../models/user";
+  registerUser,
+  loginUser,
+  logoutUser,
+  updateUserInfo as updateUserInfoService,
+  updateUserEmail,
+  updateUserPassword,
+  getCurrentUserData,
+  type UserData
+} from "../services/AuthService";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../services/firebase";
 
 interface AuthContextType {
-  user: User | null;
+  user: UserData | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (userData: {
     email: string;
     password: string;
@@ -28,7 +32,9 @@ interface AuthContextType {
     };
     phoneNumber?: string;
   }) => Promise<{ success: boolean; error?: string }>;
-  updateUserInfo: (updatedInfo: Partial<Omit<User, 'id' | 'passwordHash' | 'role' | 'createdAt' | 'updatedAt'>>) => void;
+  updateUserInfo: (updatedInfo: Partial<Omit<UserData, 'id' | 'role' | 'createdAt' | 'email'>>) => Promise<void>;
+  updateEmail: (newEmail: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   isLoggedIn: boolean;
   isAdmin: boolean;
 }
@@ -36,45 +42,63 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Initialize auth state on page load
+  // استمع إلى تغييرات حالة المصادقة
   useEffect(() => {
-    const storedUser = getCurrentUser();
-    setUser(storedUser);
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      if (firebaseUser) {
+        // إذا كان المستخدم مسجل الدخول، قم بجلب بياناته
+        const userData = await getCurrentUserData();
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    
+    // إلغاء الاشتراك عند فك التحميل
+    return () => unsubscribe();
   }, []);
   
-  // Login function
+  // تسجيل الدخول
   const login = async (email: string, password: string) => {
     try {
-      const authenticatedUser = authenticateUser(email, password);
-      
-      if (!authenticatedUser) {
-        return { success: false, error: "Invalid email or password" };
-      }
-      
-      // Store user in context and localStorage
-      setUser(authenticatedUser);
-      saveCurrentUser(authenticatedUser);
-      
+      const userData = await loginUser(email, password);
+      setUser(userData);
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: "An error occurred during login. Please try again." 
-      };
+      console.error('خطأ في تسجيل الدخول:', error);
+      
+      // تحديد رسالة خطأ مناسبة
+      let errorMessage = "فشل تسجيل الدخول. تحقق من بريدك الإلكتروني وكلمة المرور.";
+      
+      if (error instanceof Error) {
+        // معالجة أخطاء Firebase Auth الشائعة
+        if (error.message.includes('wrong-password') || error.message.includes('user-not-found')) {
+          errorMessage = "بريد إلكتروني أو كلمة مرور غير صحيحة";
+        } else if (error.message.includes('too-many-requests')) {
+          errorMessage = "تم تقييد الوصول بسبب محاولات تسجيل دخول متكررة. حاول مرة أخرى لاحقًا.";
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
   
-  // Logout function
-  const logout = () => {
-    setUser(null);
-    clearCurrentUser();
+  // تسجيل الخروج
+  const logout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+    } catch (error) {
+      console.error('خطأ في تسجيل الخروج:', error);
+    }
   };
   
-  // Register function
+  // التسجيل
   const register = async (userData: {
     email: string;
     password: string;
@@ -90,34 +114,105 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phoneNumber?: string;
   }) => {
     try {
-      // Register the user
-      const newUser = registerUser(userData);
+      const newUser = await registerUser(
+        userData.email,
+        userData.password,
+        userData.firstName,
+        userData.lastName,
+        userData.phoneNumber,
+        userData.address
+      );
       
-      // Auto login after registration
       setUser(newUser);
-      saveCurrentUser(newUser);
-      
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: "An error occurred during registration. Please try again." 
-      };
+      console.error('خطأ في التسجيل:', error);
+      
+      // تحديد رسالة خطأ مناسبة
+      let errorMessage = "فشل إنشاء الحساب. حاول مرة أخرى.";
+      
+      if (error instanceof Error) {
+        // معالجة أخطاء Firebase Auth الشائعة
+        if (error.message.includes('email-already-in-use')) {
+          errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل";
+        } else if (error.message.includes('weak-password')) {
+          errorMessage = "كلمة المرور ضعيفة جدًا. يجب أن تكون على الأقل 6 أحرف.";
+        } else if (error.message.includes('invalid-email')) {
+          errorMessage = "البريد الإلكتروني غير صالح";
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
   
-  // Update user information
-  const updateUserInfo = (updatedInfo: Partial<Omit<User, 'id' | 'passwordHash' | 'role' | 'createdAt' | 'updatedAt'>>) => {
+  // تحديث معلومات المستخدم
+  const updateUserInfo = async (updatedInfo: Partial<Omit<UserData, 'id' | 'role' | 'createdAt' | 'email'>>) => {
     if (!user) return;
     
-    const updatedUser = {
-      ...user,
-      ...updatedInfo,
-      updatedAt: new Date().toISOString()
-    };
-    
-    setUser(updatedUser);
-    saveCurrentUser(updatedUser);
+    try {
+      await updateUserInfoService(user.id, updatedInfo);
+      
+      // تحديث المستخدم في الحالة المحلية
+      const updatedUser = await getCurrentUserData();
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('خطأ في تحديث معلومات المستخدم:', error);
+      throw error;
+    }
+  };
+  
+  // تحديث البريد الإلكتروني
+  const updateEmail = async (newEmail: string) => {
+    try {
+      await updateUserEmail(newEmail);
+      
+      // تحديث المستخدم في الحالة المحلية
+      const updatedUser = await getCurrentUserData();
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('خطأ في تحديث البريد الإلكتروني:', error);
+      
+      let errorMessage = "فشل تحديث البريد الإلكتروني";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('requires-recent-login')) {
+          errorMessage = "هذه العملية حساسة وتتطلب إعادة تسجيل الدخول مؤخرًا. يرجى تسجيل الخروج وإعادة تسجيل الدخول.";
+        } else if (error.message.includes('email-already-in-use')) {
+          errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل من قبل حساب آخر";
+        }
+      }
+      
+      return { success: false, error: errorMessage };
+    }
+  };
+  
+  // تحديث كلمة المرور
+  const updatePassword = async (newPassword: string) => {
+    try {
+      await updateUserPassword(newPassword);
+      return { success: true };
+    } catch (error) {
+      console.error('خطأ في تحديث كلمة المرور:', error);
+      
+      let errorMessage = "فشل تحديث كلمة المرور";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('requires-recent-login')) {
+          errorMessage = "هذه العملية حساسة وتتطلب إعادة تسجيل الدخول مؤخرًا. يرجى تسجيل الخروج وإعادة تسجيل الدخول.";
+        } else if (error.message.includes('weak-password')) {
+          errorMessage = "كلمة المرور ضعيفة جدًا. يجب أن تكون على الأقل 6 أحرف.";
+        }
+      }
+      
+      return { success: false, error: errorMessage };
+    }
   };
   
   const value = {
@@ -127,6 +222,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     register,
     updateUserInfo,
+    updateEmail,
+    updatePassword,
     isLoggedIn: !!user,
     isAdmin: user?.role === 'admin'
   };

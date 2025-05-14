@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // قواعد المستخدمين - المستخدم يمكنه قراءة وتعديل بياناته فقط
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // قواعد المنتجات - قراءة للجميع، تعديل للمشرفين فقط
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // قواعد الطلبات - المستخدم يمكنه قراءة طلباته فقط، والمشرفين يمكنهم قراءة جميع الطلبات
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // قواعد قائمة الرغبات - المستخدم يمكنه قراءة وتعديل قائمة الرغبات الخاصة به فقط
+    match /wishlists/{wishlistId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // قواعد التقييمات - قراءة للجميع، إنشاء وتعديل للمستخدمين المسجلين
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
+    // دالة للتحقق من صلاحيات المشرف
+    function isAdmin() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+} 
