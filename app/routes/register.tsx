@@ -88,10 +88,11 @@ export default function Register() {
       
       if (result.success) {
         navigate("/account");
-      } else {
-        setErrors({ form: result.error || "Failed to create account. Please try again." });
+      } else if (result.error) {
+        setErrors({ form: result.error });
       }
     } catch (err) {
+      console.error("Registration error:", err);
       setErrors({ form: "An unexpected error occurred. Please try again." });
     } finally {
       setIsSubmitting(false);

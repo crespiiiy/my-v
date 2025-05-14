@@ -12,7 +12,7 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 /**
- * واجهة بيانات المستخدم
+ * User data interface
  */
 export interface UserData {
   id: string;
@@ -33,7 +33,7 @@ export interface UserData {
 }
 
 /**
- * تسجيل مستخدم جديد
+ * Register a new user
  */
 export const registerUser = async (
   email: string,
@@ -50,67 +50,68 @@ export const registerUser = async (
   }
 ): Promise<UserData> => {
   try {
-    // إنشاء المستخدم في Firebase Auth
+    // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // تعيين اسم المستخدم في الملف الشخصي
+    // Set user's display name in the profile
     await updateProfile(user, {
       displayName: `${firstName} ${lastName}`
     });
     
-    // إنشاء بيانات المستخدم في Firestore
+    // Create user data in Firestore
     const userData: UserData = {
       id: user.uid,
       email: user.email || email,
       firstName,
       lastName,
-      role: 'customer', // دور المستخدم الافتراضي
+      role: 'customer', // Default user role
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       phoneNumber,
       address
     };
     
-    // حفظ بيانات المستخدم في Firestore
+    // Save user data to Firestore
     await setDoc(doc(db, 'users', user.uid), userData);
     
+    // Make sure to return the user data after successful registration
     return userData;
   } catch (error) {
-    console.error('خطأ في تسجيل المستخدم:', error);
+    console.error('Error registering user:', error);
     throw error;
   }
 };
 
 /**
- * تسجيل الدخول
+ * Login
  */
 export const loginUser = async (email: string, password: string): Promise<{success: boolean; userData?: UserData; error?: string}> => {
   try {
-    // تسجيل الدخول باستخدام Firebase Auth
+    // Login using Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
     try {
-      // جلب بيانات المستخدم من Firestore
+      // Fetch user data from Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       
       if (!userDoc.exists()) {
-        // إذا كان المستخدم موجود في المصادقة ولكن ليس في Firestore، قم بإنشاء سجل له
+        // If user exists in Auth but not in Firestore, create a record for them
         console.warn('User exists in Auth but not in Firestore, creating user record');
         
-        // إنشاء بيانات المستخدم في Firestore
+        // Create user data in Firestore
         const userData: UserData = {
           id: user.uid,
           email: user.email || email,
           firstName: user.displayName?.split(' ')[0] || '',
           lastName: user.displayName?.split(' ')[1] || '',
-          role: 'customer', // دور المستخدم الافتراضي
+          role: 'customer', // Default user role
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
         
-        // حفظ بيانات المستخدم في Firestore
+        // Save user data to Firestore
         await setDoc(doc(db, 'users', user.uid), userData);
         
         return {
@@ -126,7 +127,7 @@ export const loginUser = async (email: string, password: string): Promise<{succe
     } catch (firestoreError) {
       console.error('Error getting user data from Firestore:', firestoreError);
       
-      // إذا كان الخطأ بسبب عدم الاتصال، قم بالتسجيل على أي حال مع بيانات محدودة
+      // If error is due to being offline, log in anyway with limited data
       if (firestoreError instanceof Error && firestoreError.message.includes('offline')) {
         console.warn('Offline mode - returning limited user data');
         
@@ -137,14 +138,14 @@ export const loginUser = async (email: string, password: string): Promise<{succe
             email: user.email || email,
             firstName: user.displayName?.split(' ')[0] || '',
             lastName: user.displayName?.split(' ')[1] || '',
-            role: 'customer', // نفترض أن المستخدم عادي في وضع عدم الاتصال
+            role: 'customer', // Assume user is regular in offline mode
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
         };
       }
       
-      // خطأ آخر في Firestore
+      // Other Firestore error
       return {
         success: false,
         error: 'Error retrieving user data. Please try again.'
@@ -173,31 +174,31 @@ export const loginUser = async (email: string, password: string): Promise<{succe
 };
 
 /**
- * تسجيل الخروج
+ * Logout
  */
 export const logoutUser = async (): Promise<void> => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error('خطأ في تسجيل الخروج:', error);
+    console.error('Error logging out:', error);
     throw error;
   }
 };
 
 /**
- * إرسال رابط إعادة تعيين كلمة المرور
+ * Send password reset email
  */
 export const resetPassword = async (email: string): Promise<void> => {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    console.error('خطأ في إرسال رابط إعادة تعيين كلمة المرور:', error);
+    console.error('Error sending password reset link:', error);
     throw error;
   }
 };
 
 /**
- * تحديث معلومات المستخدم
+ * Update user information
  */
 export const updateUserInfo = async (
   userId: string, 
@@ -206,13 +207,13 @@ export const updateUserInfo = async (
   try {
     const userRef = doc(db, 'users', userId);
     
-    // تحديث بيانات المستخدم في Firestore
+    // Update user data in Firestore
     await updateDoc(userRef, {
       ...data,
       updatedAt: new Date().toISOString()
     });
     
-    // تحديث اسم العرض في Firebase Auth إذا تم تغيير الاسم
+    // Update display name in Firebase Auth if name was changed
     if (data.firstName || data.lastName) {
       const currentUser = auth.currentUser;
       if (currentUser) {
@@ -228,13 +229,13 @@ export const updateUserInfo = async (
       }
     }
   } catch (error) {
-    console.error('خطأ في تحديث معلومات المستخدم:', error);
+    console.error('Error updating user information:', error);
     throw error;
   }
 };
 
 /**
- * تحديث البريد الإلكتروني للمستخدم
+ * Update user email
  */
 export const updateUserEmail = async (
   newEmail: string
@@ -242,25 +243,25 @@ export const updateUserEmail = async (
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-      throw new Error('المستخدم غير مسجل الدخول');
+      throw new Error('User not logged in');
     }
     
-    // تحديث البريد الإلكتروني في Firebase Auth
+    // Update email in Firebase Auth
     await updateEmail(currentUser, newEmail);
     
-    // تحديث البريد الإلكتروني في Firestore
+    // Update email in Firestore
     await updateDoc(doc(db, 'users', currentUser.uid), {
       email: newEmail,
       updatedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error('خطأ في تحديث البريد الإلكتروني:', error);
+    console.error('Error updating email:', error);
     throw error;
   }
 };
 
 /**
- * تحديث كلمة المرور
+ * Update password
  */
 export const updateUserPassword = async (
   newPassword: string
@@ -268,18 +269,18 @@ export const updateUserPassword = async (
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-      throw new Error('المستخدم غير مسجل الدخول');
+      throw new Error('User not logged in');
     }
     
     await updatePassword(currentUser, newPassword);
   } catch (error) {
-    console.error('خطأ في تحديث كلمة المرور:', error);
+    console.error('Error updating password:', error);
     throw error;
   }
 };
 
 /**
- * الحصول على المستخدم الحالي وبياناته
+ * Get current user and their data
  */
 export const getCurrentUserData = async (): Promise<UserData | null> => {
   const currentUser = auth.currentUser;
@@ -297,13 +298,13 @@ export const getCurrentUserData = async (): Promise<UserData | null> => {
     
     return userDoc.data() as UserData;
   } catch (error) {
-    console.error('خطأ في الحصول على بيانات المستخدم الحالي:', error);
+    console.error('Error getting current user data:', error);
     return null;
   }
 };
 
 /**
- * تحويل مستخدم Firebase إلى نموذج بيانات المستخدم الخاص بنا
+ * Convert Firebase user to our user data model
  */
 export const firebaseUserToUserData = async (firebaseUser: FirebaseUser): Promise<UserData | null> => {
   try {
@@ -315,33 +316,33 @@ export const firebaseUserToUserData = async (firebaseUser: FirebaseUser): Promis
     
     return userDoc.data() as UserData;
   } catch (error) {
-    console.error('خطأ في تحويل مستخدم Firebase:', error);
+    console.error('Error converting Firebase user:', error);
     return null;
   }
 };
 
 /**
- * ترقية مستخدم إلى مسؤول
+ * Promote user to admin
  */
 export const promoteUserToAdmin = async (userId: string): Promise<void> => {
   try {
     const userRef = doc(db, 'users', userId);
     
-    // تحديث دور المستخدم في Firestore
+    // Update user role in Firestore
     await updateDoc(userRef, {
       role: 'admin',
       updatedAt: new Date().toISOString()
     });
     
-    console.log(`تمت ترقية المستخدم ${userId} إلى مسؤول بنجاح`);
+    console.log(`User ${userId} has been successfully promoted to admin`);
   } catch (error) {
-    console.error('خطأ في ترقية المستخدم إلى مسؤول:', error);
+    console.error('Error promoting user to admin:', error);
     throw error;
   }
 };
 
 /**
- * إنشاء مستخدم إداري مباشرة (لإنشاء المسؤول الأول في النظام)
+ * Create admin user directly (for creating the first admin in the system)
  */
 export const createAdminUser = async (
   email: string,
@@ -358,35 +359,35 @@ export const createAdminUser = async (
   }
 ): Promise<UserData> => {
   try {
-    // إنشاء المستخدم في Firebase Auth
+    // Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // تعيين اسم المستخدم في الملف الشخصي
+    // Set user's display name in profile
     await updateProfile(user, {
       displayName: `${firstName} ${lastName}`
     });
     
-    // إنشاء بيانات المستخدم في Firestore مع دور المسؤول مباشرة
+    // Create user data in Firestore with admin role directly
     const userData: UserData = {
       id: user.uid,
       email: user.email || email,
       firstName,
       lastName,
-      role: 'admin', // تعيين الدور كمسؤول مباشرة
+      role: 'admin', // Set role as admin directly
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       phoneNumber,
       address
     };
     
-    // حفظ بيانات المستخدم في Firestore
+    // Save user data to Firestore
     await setDoc(doc(db, 'users', user.uid), userData);
     
-    console.log(`تم إنشاء المستخدم الإداري بنجاح: ${email}`);
+    console.log(`Admin user created successfully: ${email}`);
     return userData;
   } catch (error) {
-    console.error('خطأ في إنشاء المستخدم الإداري:', error);
+    console.error('Error creating admin user:', error);
     throw error;
   }
 };
