@@ -44,6 +44,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // استمع إلى تغييرات حالة المصادقة
   useEffect(() => {
@@ -53,8 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // إذا كان المستخدم مسجل الدخول، قم بجلب بياناته
         const userData = await getCurrentUserData();
         setUser(userData);
+        setIsLoggedIn(!!userData);
+        setIsAdmin(userData?.role === 'admin' || false);
       } else {
         setUser(null);
+        setIsLoggedIn(false);
+        setIsAdmin(false);
       }
       setLoading(false);
     });
@@ -65,26 +73,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // تسجيل الدخول
   const login = async (email: string, password: string) => {
+    setLoadingAuth(true);
+    setError(null);
+    
     try {
-      const userData = await loginUser(email, password);
-      setUser(userData);
-      return { success: true };
+      const response = await loginUser(email, password);
+      
+      if (response.success && response.userData) {
+        setUser(response.userData);
+        setIsLoggedIn(true);
+        setIsAdmin(response.userData.role === 'admin');
+        
+        return { success: true };
+      } else {
+        setError(response.error || 'Failed to sign in');
+        return { success: false, error: response.error || 'Failed to sign in' };
+      }
     } catch (error) {
-      console.error('خطأ في تسجيل الدخول:', error);
+      console.error('Login error:', error);
       
-      // تحديد رسالة خطأ مناسبة
-      let errorMessage = "فشل تسجيل الدخول. تحقق من بريدك الإلكتروني وكلمة المرور.";
-      
+      let errorMessage = 'An unexpected error occurred';
       if (error instanceof Error) {
-        // معالجة أخطاء Firebase Auth الشائعة
-        if (error.message.includes('wrong-password') || error.message.includes('user-not-found')) {
-          errorMessage = "بريد إلكتروني أو كلمة مرور غير صحيحة";
-        } else if (error.message.includes('too-many-requests')) {
-          errorMessage = "تم تقييد الوصول بسبب محاولات تسجيل دخول متكررة. حاول مرة أخرى لاحقًا.";
-        }
+        errorMessage = error.message;
       }
       
+      setError(errorMessage);
       return { success: false, error: errorMessage };
+    } finally {
+      setLoadingAuth(false);
     }
   };
   
@@ -93,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutUser();
       setUser(null);
+      setIsLoggedIn(false);
+      setIsAdmin(false);
     } catch (error) {
       console.error('خطأ في تسجيل الخروج:', error);
     }
@@ -124,6 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       
       setUser(newUser);
+      setIsLoggedIn(true);
+      setIsAdmin(newUser.role === 'admin');
       return { success: true };
     } catch (error) {
       console.error('خطأ في التسجيل:', error);
@@ -157,6 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = await getCurrentUserData();
       if (updatedUser) {
         setUser(updatedUser);
+        setIsLoggedIn(true);
+        setIsAdmin(updatedUser.role === 'admin');
       }
     } catch (error) {
       console.error('خطأ في تحديث معلومات المستخدم:', error);
@@ -173,6 +195,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = await getCurrentUserData();
       if (updatedUser) {
         setUser(updatedUser);
+        setIsLoggedIn(true);
+        setIsAdmin(updatedUser.role === 'admin');
       }
       
       return { success: true };
@@ -224,8 +248,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserInfo,
     updateEmail,
     updatePassword,
-    isLoggedIn: !!user,
-    isAdmin: user?.role === 'admin'
+    isLoggedIn,
+    isAdmin
   };
   
   return (

@@ -3,9 +3,9 @@ import { initializeApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import type { Analytics } from "firebase/analytics";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getAuth, connectAuthEmulator, setPersistence, browserSessionPersistence } from "firebase/auth";
 import type { Auth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableNetwork, disableNetwork } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import type { FirebaseStorage } from "firebase/storage";
@@ -35,10 +35,54 @@ auth = getAuth(app);
 db = getFirestore(app);
 storage = getStorage(app);
 
+// Setup improved auth persistence for better reliability
+setPersistence(auth, browserSessionPersistence)
+  .catch((error) => {
+    console.error("Firebase auth persistence error:", error);
+  });
+
+// Network status monitoring
+let isNetworkOnline = true;
+
+// Function to monitor network status
+const monitorNetworkStatus = () => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      isNetworkOnline = true;
+      enableNetwork(db).catch(console.error);
+      console.log('Firebase connection restored');
+    });
+    
+    window.addEventListener('offline', () => {
+      isNetworkOnline = false;
+      console.log('Firebase connection lost - device offline');
+    });
+  }
+};
+
+// Setup network monitoring for Firestore
+monitorNetworkStatus();
+
 // Initialize browser-only services
 if (typeof window !== 'undefined') {
   analytics = getAnalytics(app);
 }
+
+// Function to check network status
+export const isOnline = () => isNetworkOnline;
+
+// Function to force reconnect to Firebase
+export const reconnectToFirebase = async () => {
+  try {
+    await disableNetwork(db);
+    await enableNetwork(db);
+    console.log('Firebase connection reestablished');
+    return true;
+  } catch (error) {
+    console.error('Error reconnecting to Firebase:', error);
+    return false;
+  }
+};
 
 export { app, analytics, auth, db, storage };
 
@@ -54,5 +98,7 @@ export default {
   auth,
   db,
   storage,
-  isInitialized: isFirebaseInitialized
+  isInitialized: isFirebaseInitialized,
+  isOnline,
+  reconnectToFirebase
 }; 

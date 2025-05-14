@@ -85,23 +85,90 @@ export const registerUser = async (
 /**
  * تسجيل الدخول
  */
-export const loginUser = async (email: string, password: string): Promise<UserData> => {
+export const loginUser = async (email: string, password: string): Promise<{success: boolean; userData?: UserData; error?: string}> => {
   try {
     // تسجيل الدخول باستخدام Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // جلب بيانات المستخدم من Firestore
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    try {
+      // جلب بيانات المستخدم من Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // إذا كان المستخدم موجود في المصادقة ولكن ليس في Firestore، قم بإنشاء سجل له
+        console.warn('User exists in Auth but not in Firestore, creating user record');
+        
+        // إنشاء بيانات المستخدم في Firestore
+        const userData: UserData = {
+          id: user.uid,
+          email: user.email || email,
+          firstName: user.displayName?.split(' ')[0] || '',
+          lastName: user.displayName?.split(' ')[1] || '',
+          role: 'customer', // دور المستخدم الافتراضي
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // حفظ بيانات المستخدم في Firestore
+        await setDoc(doc(db, 'users', user.uid), userData);
+        
+        return {
+          success: true,
+          userData
+        };
+      }
+      
+      return {
+        success: true,
+        userData: userDoc.data() as UserData
+      };
+    } catch (firestoreError) {
+      console.error('Error getting user data from Firestore:', firestoreError);
+      
+      // إذا كان الخطأ بسبب عدم الاتصال، قم بالتسجيل على أي حال مع بيانات محدودة
+      if (firestoreError instanceof Error && firestoreError.message.includes('offline')) {
+        console.warn('Offline mode - returning limited user data');
+        
+        return {
+          success: true,
+          userData: {
+            id: user.uid,
+            email: user.email || email,
+            firstName: user.displayName?.split(' ')[0] || '',
+            lastName: user.displayName?.split(' ')[1] || '',
+            role: 'customer', // نفترض أن المستخدم عادي في وضع عدم الاتصال
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        };
+      }
+      
+      // خطأ آخر في Firestore
+      return {
+        success: false,
+        error: 'Error retrieving user data. Please try again.'
+      };
+    }
+  } catch (authError) {
+    console.error('Error in authentication:', authError);
     
-    if (!userDoc.exists()) {
-      throw new Error('بيانات المستخدم غير موجودة');
+    let errorMessage = "Failed to sign in. Please check your email and password.";
+    
+    if (authError instanceof Error) {
+      if (authError.message.includes('auth/wrong-password') || authError.message.includes('auth/user-not-found')) {
+        errorMessage = "Incorrect email or password.";
+      } else if (authError.message.includes('auth/too-many-requests')) {
+        errorMessage = "Too many failed login attempts. Please try again later.";
+      } else if (authError.message.includes('auth/network-request-failed')) {
+        errorMessage = "Network error. Please check your internet connection.";
+      }
     }
     
-    return userDoc.data() as UserData;
-  } catch (error) {
-    console.error('خطأ في تسجيل الدخول:', error);
-    throw error;
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
 };
 
