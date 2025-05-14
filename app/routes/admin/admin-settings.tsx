@@ -5,8 +5,8 @@ import AdminTools from '../../components/admin/AdminTools';
 
 export function meta() {
   return [
-    { title: 'أدوات المسؤول - كرييتيف' },
-    { name: 'description', content: 'أدوات خاصة بالمسؤول لمتجر كرييتيف' },
+    { title: 'Admin Tools - Creative' },
+    { name: 'description', content: 'Admin tools for Creative store' },
   ];
 }
 
@@ -14,14 +14,14 @@ export default function AdminSettings() {
   const { isAdmin, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
   
-  // التحقق من أن المستخدم مسؤول
+  // Check if user is admin
   useEffect(() => {
     if (!loading && (!isLoggedIn || !isAdmin)) {
       navigate('/login', { replace: true });
     }
   }, [isAdmin, isLoggedIn, loading, navigate]);
   
-  // عرض رسالة تحميل أثناء التحقق من حالة المستخدم
+  // Show loading indicator while checking user status
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
@@ -30,14 +30,14 @@ export default function AdminSettings() {
     );
   }
   
-  // إذا لم يكن المستخدم مسؤولًا، لا نعرض شيئًا (سيتم توجيهه بواسطة useEffect)
+  // If user is not admin, don't render (they will be redirected by useEffect)
   if (!isAdmin) {
     return null;
   }
   
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">أدوات المسؤول</h1>
+      <h1 className="text-3xl font-bold mb-6">Admin Tools</h1>
       
       <div className="grid grid-cols-1 gap-8">
         <div>

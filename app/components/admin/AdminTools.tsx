@@ -4,10 +4,10 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 /**
- * مكون أدوات الإدارة للمسؤولين
+ * Admin Tools Component
  */
 const AdminTools: React.FC = () => {
-  // حالة إنشاء مسؤول جديد
+  // New admin user state
   const [newAdminData, setNewAdminData] = useState({
     email: '',
     password: '',
@@ -15,39 +15,39 @@ const AdminTools: React.FC = () => {
     lastName: '',
   });
   
-  // حالة ترقية مستخدم
+  // User promotion state
   const [userIdToPromote, setUserIdToPromote] = useState('');
   const [userEmailToPromote, setUserEmailToPromote] = useState('');
   const [searchMethod, setSearchMethod] = useState<'id' | 'email'>('email');
   
-  // حالة الرسائل
+  // Messages state
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // التعامل مع تغيير بيانات المسؤول الجديد
+  // Handle admin data changes
   const handleAdminDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewAdminData(prev => ({ ...prev, [name]: value }));
   };
   
-  // إنشاء مسؤول جديد
+  // Create new admin
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     
     try {
-      // التحقق من البيانات
+      // Validate data
       if (!newAdminData.email || !newAdminData.password || !newAdminData.firstName || !newAdminData.lastName) {
-        throw new Error('جميع الحقول مطلوبة');
+        throw new Error('All fields are required');
       }
       
-      // التحقق من طول كلمة المرور
+      // Check password length
       if (newAdminData.password.length < 6) {
-        throw new Error('يجب أن تكون كلمة المرور 6 أحرف على الأقل');
+        throw new Error('Password must be at least 6 characters');
       }
       
-      // إنشاء المستخدم الإداري مباشرة
+      // Create admin user directly
       const adminUser = await createAdminUser(
         newAdminData.email,
         newAdminData.password,
@@ -55,13 +55,13 @@ const AdminTools: React.FC = () => {
         newAdminData.lastName
       );
       
-      // عرض رسالة نجاح
+      // Show success message
       setMessage({ 
-        text: `تم إنشاء المسؤول بنجاح: ${newAdminData.email}`, 
+        text: `Admin user created successfully: ${newAdminData.email}`, 
         type: 'success' 
       });
       
-      // إعادة تعيين النموذج
+      // Reset form
       setNewAdminData({
         email: '',
         password: '',
@@ -69,9 +69,9 @@ const AdminTools: React.FC = () => {
         lastName: '',
       });
     } catch (error) {
-      console.error('خطأ في إنشاء مسؤول:', error);
+      console.error('Error creating admin:', error);
       setMessage({ 
-        text: `فشل في إنشاء المسؤول: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`, 
+        text: `Failed to create admin: ${error instanceof Error ? error.message : 'Unknown error'}`, 
         type: 'error' 
       });
     } finally {
@@ -79,7 +79,7 @@ const AdminTools: React.FC = () => {
     }
   };
   
-  // ترقية مستخدم موجود إلى مسؤول
+  // Promote existing user to admin
   const handlePromoteUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -87,14 +87,14 @@ const AdminTools: React.FC = () => {
     
     try {
       if (searchMethod === 'id' && !userIdToPromote) {
-        throw new Error('معرف المستخدم مطلوب');
+        throw new Error('User ID is required');
       }
       
       if (searchMethod === 'email' && !userEmailToPromote) {
-        throw new Error('البريد الإلكتروني للمستخدم مطلوب');
+        throw new Error('User email is required');
       }
       
-      // إذا تم البحث بالبريد الإلكتروني، فابحث عن معرف المستخدم أولاً
+      // If searching by email, find user ID first
       let userId = userIdToPromote;
       
       if (searchMethod === 'email') {
@@ -103,28 +103,28 @@ const AdminTools: React.FC = () => {
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-          throw new Error('لم يتم العثور على مستخدم بهذا البريد الإلكتروني');
+          throw new Error('No user found with this email');
         }
         
         userId = querySnapshot.docs[0].id;
       }
       
-      // ترقية المستخدم
+      // Promote user
       await promoteUserToAdmin(userId);
       
-      // عرض رسالة نجاح
+      // Show success message
       setMessage({ 
-        text: `تمت ترقية المستخدم بنجاح ${searchMethod === 'email' ? userEmailToPromote : userId}`, 
+        text: `User ${searchMethod === 'email' ? userEmailToPromote : userId} promoted to admin successfully`, 
         type: 'success' 
       });
       
-      // إعادة تعيين النموذج
+      // Reset form
       setUserIdToPromote('');
       setUserEmailToPromote('');
     } catch (error) {
-      console.error('خطأ في ترقية المستخدم:', error);
+      console.error('Error promoting user:', error);
       setMessage({ 
-        text: `فشل في ترقية المستخدم: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`, 
+        text: `Failed to promote user: ${error instanceof Error ? error.message : 'Unknown error'}`, 
         type: 'error' 
       });
     } finally {
@@ -134,23 +134,23 @@ const AdminTools: React.FC = () => {
   
   return (
     <div className="space-y-8 p-6 bg-gray-800 rounded-lg">
-      <h2 className="text-2xl font-bold text-white mb-6">أدوات الإدارة</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">Admin Tools</h2>
       
-      {/* رسالة النجاح أو الخطأ */}
+      {/* Success or error message */}
       {message && (
         <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
           {message.text}
         </div>
       )}
       
-      {/* نموذج إنشاء مسؤول جديد */}
+      {/* Create new admin form */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-4">إنشاء حساب مسؤول جديد</h3>
+        <h3 className="text-xl font-semibold text-white mb-4">Create New Admin Account</h3>
         <form onSubmit={handleCreateAdmin} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-1">
-                الاسم الأول
+                First Name
               </label>
               <input
                 type="text"
@@ -164,7 +164,7 @@ const AdminTools: React.FC = () => {
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-1">
-                الاسم الأخير
+                Last Name
               </label>
               <input
                 type="text"
@@ -180,7 +180,7 @@ const AdminTools: React.FC = () => {
           
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-              البريد الإلكتروني
+              Email Address
             </label>
             <input
               type="email"
@@ -196,7 +196,7 @@ const AdminTools: React.FC = () => {
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-              كلمة المرور
+              Password
             </label>
             <input
               type="password"
@@ -209,7 +209,7 @@ const AdminTools: React.FC = () => {
               minLength={6}
               dir="ltr"
             />
-            <p className="text-xs text-gray-400 mt-1">يجب أن تكون كلمة المرور 6 أحرف على الأقل</p>
+            <p className="text-xs text-gray-400 mt-1">Password must be at least 6 characters</p>
           </div>
           
           <button
@@ -217,16 +217,16 @@ const AdminTools: React.FC = () => {
             disabled={loading}
             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
           >
-            {loading ? 'جاري الإنشاء...' : 'إنشاء مسؤول جديد'}
+            {loading ? 'Creating...' : 'Create Admin User'}
           </button>
         </form>
       </div>
       
       <hr className="border-gray-600" />
       
-      {/* نموذج ترقية مستخدم موجود */}
+      {/* Promote existing user form */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-4">ترقية مستخدم موجود إلى مسؤول</h3>
+        <h3 className="text-xl font-semibold text-white mb-4">Promote Existing User to Admin</h3>
         
         <div className="mb-4">
           <div className="flex space-x-4 mb-4">
@@ -238,7 +238,7 @@ const AdminTools: React.FC = () => {
                 onChange={() => setSearchMethod('email')}
                 className="mr-2"
               />
-              البحث بالبريد الإلكتروني
+              Search by Email
             </label>
             <label className="flex items-center text-gray-300">
               <input
@@ -248,7 +248,7 @@ const AdminTools: React.FC = () => {
                 onChange={() => setSearchMethod('id')}
                 className="mr-2"
               />
-              البحث بمعرف المستخدم
+              Search by User ID
             </label>
           </div>
         </div>
@@ -257,7 +257,7 @@ const AdminTools: React.FC = () => {
           {searchMethod === 'email' ? (
             <div>
               <label htmlFor="userEmailToPromote" className="block text-sm font-medium text-gray-300 mb-1">
-                البريد الإلكتروني للمستخدم
+                User Email
               </label>
               <input
                 type="email"
@@ -272,7 +272,7 @@ const AdminTools: React.FC = () => {
           ) : (
             <div>
               <label htmlFor="userIdToPromote" className="block text-sm font-medium text-gray-300 mb-1">
-                معرف المستخدم
+                User ID
               </label>
               <input
                 type="text"
@@ -291,7 +291,7 @@ const AdminTools: React.FC = () => {
             disabled={loading}
             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
           >
-            {loading ? 'جاري الترقية...' : 'ترقية إلى مسؤول'}
+            {loading ? 'Promoting...' : 'Promote to Admin'}
           </button>
         </form>
       </div>

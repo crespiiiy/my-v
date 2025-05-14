@@ -4,8 +4,8 @@ import { resetPassword } from "../services/AuthService";
 
 export function meta() {
   return [
-    { title: "استعادة كلمة المرور - كرييتيف" },
-    { name: "description", content: "استعادة كلمة المرور لحسابك في كرييتيف" },
+    { title: "Password Reset - Creative" },
+    { name: "description", content: "Reset your Creative account password" },
   ];
 }
 
@@ -19,7 +19,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     if (!email.trim()) {
-      setError("يرجى إدخال بريدك الإلكتروني");
+      setError("Please enter your email address");
       return;
     }
     
@@ -30,13 +30,13 @@ export default function ForgotPassword() {
       await resetPassword(email);
       setSuccess(true);
     } catch (error) {
-      console.error('خطأ في إرسال بريد إعادة تعيين كلمة المرور:', error);
+      console.error('Error sending password reset email:', error);
       
-      let errorMessage = "فشل في إرسال رابط إعادة تعيين كلمة المرور";
+      let errorMessage = "Failed to send password reset link";
       
       if (error instanceof Error) {
         if (error.message.includes('user-not-found')) {
-          errorMessage = "لم يتم العثور على حساب بهذا البريد الإلكتروني";
+          errorMessage = "No account found with this email address";
         } 
       }
       
@@ -49,23 +49,23 @@ export default function ForgotPassword() {
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">استعادة كلمة المرور</h1>
-        <p className="text-gray-400">أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور</p>
+        <h1 className="text-3xl font-bold mb-2">Reset Password</h1>
+        <p className="text-gray-400">Enter your email to reset your password</p>
       </div>
       
       <div className="bg-gray-800 rounded-lg p-8">
         {success ? (
           <div className="text-center">
             <div className="bg-green-900/50 border border-green-700 text-white px-4 py-4 rounded-md mb-6">
-              <p>تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.</p>
-              <p className="mt-2">يرجى التحقق من صندوق الوارد الخاص بك واتباع التعليمات.</p>
+              <p>Password reset link has been sent to your email.</p>
+              <p className="mt-2">Please check your inbox and follow the instructions.</p>
             </div>
             
             <Link
               to="/login"
               className="text-blue-400 hover:text-blue-300 mt-4 inline-block"
             >
-              العودة إلى صفحة تسجيل الدخول
+              Return to Login Page
             </Link>
           </div>
         ) : (
@@ -79,7 +79,7 @@ export default function ForgotPassword() {
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  البريد الإلكتروني
+                  Email Address
                 </label>
                 <input
                   type="email"
@@ -106,17 +106,17 @@ export default function ForgotPassword() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    جاري الإرسال...
+                    Sending...
                   </>
                 ) : (
-                  "إرسال رابط إعادة التعيين"
+                  "Send Reset Link"
                 )}
               </button>
             </form>
             
             <div className="flex justify-center mt-8">
               <Link to="/login" className="text-blue-400 hover:text-blue-300">
-                العودة إلى تسجيل الدخول
+                Back to Login
               </Link>
             </div>
           </>
