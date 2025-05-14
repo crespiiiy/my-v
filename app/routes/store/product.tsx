@@ -10,9 +10,11 @@ import ReviewForm from "../../components/ReviewForm";
 import StarRating from "../../components/StarRating";
 import { useAuth } from "../../contexts/AuthContext";
 import SecurityBadges from "../../components/SecurityBadges";
+import WishlistButton from "../../components/WishlistButton";
 
 export function meta({ params }: Route.MetaArgs) {
-  const product = getProductById(params.productId);
+  const productId = params.productId;
+  const product = productId ? getProductById(productId) : undefined;
   
   if (!product) {
     return [
@@ -127,12 +129,15 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
         {/* Product Images */}
         <div>
-          <div className="bg-gray-800 rounded-lg overflow-hidden mb-4">
+          <div className="bg-gray-800 rounded-lg overflow-hidden mb-4 relative">
             <img
               src={product.images[activeImageIndex] || "https://placehold.co/800x600/111827/ffffff?text=No+Image"}
               alt={product.name}
               className="w-full h-auto object-cover aspect-[4/3]"
             />
+            <div className="absolute top-3 right-3">
+              <WishlistButton product={product} />
+            </div>
           </div>
           
           {/* Thumbnail Images */}

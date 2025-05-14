@@ -2,6 +2,9 @@ import type { RouteObject } from "react-router-dom";
 import React from "react";
 import { ErrorBoundary, ErrorFallback } from "./components/ErrorBoundary";
 
+// Explicitly import the wishlist component to ensure it exists
+import WishlistPage from "./routes/wishlist";
+
 // Log component loading
 console.log('Loading routes configuration...');
 
@@ -20,6 +23,13 @@ const componentImports: Record<string, () => Promise<any>> = {
   "routes/store": () => import("./routes/store"),
   "routes/store/product": () => import("./routes/store/product"),
   "routes/cart": () => import("./routes/cart"),
+  "routes/wishlist": () => {
+    console.log('Loading wishlist component...');
+    return import("./routes/wishlist").catch(err => {
+      console.error('Error loading wishlist component:', err);
+      throw err;
+    });
+  },
   "routes/checkout": () => import("./routes/checkout"),
   "routes/checkout/success": () => import("./routes/checkout/success"),
   "routes/login": () => import("./routes/login"),
@@ -64,6 +74,12 @@ const createRoute = (path: string, componentPath: string): RouteObject => ({
   }
 });
 
+// Special route for wishlist to avoid dynamic import issues
+const wishlistRoute = {
+  path: "wishlist",
+  element: <WishlistPage />
+};
+
 const rootRoute = {
   path: "/", 
   async lazy() {
@@ -86,7 +102,7 @@ const rootRoute = {
     createRoute("store", "routes/store"),
     createRoute("store/:productId", "routes/store/product"),
     createRoute("cart", "routes/cart"),
-    createRoute("wishlist", "routes/wishlist"),
+    wishlistRoute, // Use the statically imported route
     createRoute("checkout", "routes/checkout"),
     createRoute("checkout/success", "routes/checkout/success"),
     
