@@ -36,6 +36,8 @@ const componentImports: Record<string, () => Promise<any>> = {
   "routes/register": () => import("./routes/register"),
   "routes/account/index": () => import("./routes/account/index"),
   "routes/account/orders": () => import("./routes/account/orders"),
+  "routes/account/addresses": () => import("./routes/account/addresses"),
+  "routes/account/password": () => import("./routes/account/password"),
   "routes/admin/index": () => import("./routes/admin/index"),
   "routes/admin/products": () => import("./routes/admin/products"),
   "routes/admin/products/new": () => import("./routes/admin/products/new"),
@@ -116,6 +118,8 @@ const rootRoute = {
     // Account routes
     createRoute("account", "routes/account/index"),
     createRoute("account/orders", "routes/account/orders"),
+    createRoute("account/addresses", "routes/account/addresses"),
+    createRoute("account/password", "routes/account/password"),
     
     // Legal/Policy routes
     createRoute("privacy-policy", "routes/privacy-policy"),
