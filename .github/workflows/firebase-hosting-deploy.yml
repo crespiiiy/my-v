@@ -8,8 +8,75 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Create build directory
+        run: mkdir -p build
+      
+      - name: Create index.html
+        run: |
+          cat > build/index.html << 'EOL'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Creative Store</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  margin: 0;
+                  padding: 0;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 100vh;
+                  background-color: #f5f5f5;
+                  color: #333;
+                }
+                .container {
+                  text-align: center;
+                  padding: 2rem;
+                  background-color: white;
+                  border-radius: 10px;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                  max-width: 600px;
+                  width: 100%;
+                }
+                h1 {
+                  color: #4a4a4a;
+                }
+                p {
+                  margin: 1rem 0;
+                  line-height: 1.6;
+                }
+                .coming-soon {
+                  font-size: 1.25rem;
+                  font-weight: bold;
+                  color: #e64a19;
+                  margin-top: 1.5rem;
+                }
+                .footer {
+                  margin-top: 2rem;
+                  font-size: 0.85rem;
+                  color: #888;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Creative Store</h1>
+                <p>Welcome to our e-commerce website. We're excited to bring you a fantastic shopping experience.</p>
+                <p class="coming-soon">Website launching soon!</p>
+                <p>Thank you for your patience while we put the finishing touches on our site.</p>
+                <p class="footer">Last updated: May 14, 2025 - Deployed via CI/CD</p>
+              </div>
+            </body>
+          </html>
+          EOL
+      
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
+      
       - name: Deploy to Firebase
         run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
         env:
