@@ -1,361 +1,304 @@
-import type { User } from "./user";
-import type { CartItem } from "./cart";
-
-export type OrderStatus = 
-  | "pending" 
-  | "processing" 
-  | "shipped" 
-  | "delivered" 
-  | "cancelled";
-
-export type PaymentStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "refunded";
-
-export type ShippingMethod = 
-  | "standard"
-  | "priority"
-  | "express";
-
-export interface ShippingDetails {
-  firstName: string;
-  lastName: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  email: string;
-  phoneNumber?: string;
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
-export interface TrackingInfo {
-  carrier: string;
-  trackingNumber: string;
-  estimatedDeliveryDate?: string;
-  trackingUrl?: string;
-  events: {
-    date: string;
-    status: string;
-    location?: string;
-    description: string;
-  }[];
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
 }
+
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Order {
   id: string;
-  userId: string;
-  items: CartItem[];
-  status: OrderStatus;
-  paymentStatus: PaymentStatus;
-  shippingMethod: ShippingMethod;
-  shippingCost: number;
-  shippingDetails: ShippingDetails;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  items: OrderItem[];
+  shippingAddress: Address;
+  billingAddress: Address;
   subtotal: number;
   tax: number;
+  shippingCost: number;
+  discount: number;
   total: number;
-  notes?: string;
-  tracking?: TrackingInfo;
+  paymentMethod: string;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
   createdAt: string;
   updatedAt: string;
+  notes?: string;
+  trackingNumber?: string;
 }
 
 // Sample orders data
 export const orders: Order[] = [
   {
-    id: "ORD12345",
-    userId: "2", // John Doe
+    id: "1",
+    customerId: "2",
+    customerName: "John Doe",
+    customerEmail: "john@example.com",
     items: [
       {
-        product: {
-          id: "1",
-          name: "Professional Camera",
-          description: "High-quality professional camera for photography enthusiasts. Features 4K video recording, 24MP sensor, and advanced autofocus system.",
-          price: 1299.99,
-          images: ["/images/products/camera-1.jpg", "/images/products/camera-2.jpg", "/images/products/camera-3.jpg"],
-          category: "Photography",
-          featured: true,
-          inStock: true,
-          stockQuantity: 10,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        quantity: 1
+        productId: "1",
+        productName: "Professional Camera",
+        quantity: 1,
+        unitPrice: 1299.99,
+        totalPrice: 1299.99
+      },
+      {
+        productId: "5",
+        productName: "Premium Microphone",
+        quantity: 2,
+        unitPrice: 149.99,
+        totalPrice: 299.98
       }
     ],
-    status: "delivered",
+    shippingAddress: {
+      street: "123 Main St",
+      city: "Brooklyn",
+      state: "NY",
+      zipCode: "11201",
+      country: "United States"
+    },
+    billingAddress: {
+      street: "123 Main St",
+      city: "Brooklyn",
+      state: "NY",
+      zipCode: "11201",
+      country: "United States"
+    },
+    subtotal: 1599.97,
+    tax: 144.00,
+    shippingCost: 15.00,
+    discount: 0,
+    total: 1758.97,
+    paymentMethod: "Credit Card",
     paymentStatus: "paid",
-    shippingMethod: "standard",
-    shippingCost: 4.99,
-    shippingDetails: {
-      firstName: "John",
-      lastName: "Doe",
-      address: {
-        street: "123 Main St",
-        city: "Brooklyn",
-        state: "NY",
-        zipCode: "11201",
-        country: "United States"
-      },
-      email: "john@example.com",
-      phoneNumber: "555-123-4567"
-    },
-    subtotal: 1299.99,
-    tax: 130.00,
-    total: 1434.98,
-    tracking: {
-      carrier: "UPS",
-      trackingNumber: "1Z999AA10123456784",
-      estimatedDeliveryDate: "2023-10-15",
-      trackingUrl: "https://www.ups.com/track?tracknum=1Z999AA10123456784",
-      events: [
-        {
-          date: "2023-10-10T09:00:00Z",
-          status: "Order Processed",
-          description: "Your order has been processed and is ready for shipment."
-        },
-        {
-          date: "2023-10-11T13:25:00Z",
-          status: "Shipped",
-          location: "Distribution Center",
-          description: "Your order has been shipped."
-        },
-        {
-          date: "2023-10-14T16:12:00Z",
-          status: "Out for Delivery",
-          location: "Local Carrier Facility",
-          description: "Your package is out for delivery."
-        },
-        {
-          date: "2023-10-14T18:45:00Z",
-          status: "Delivered",
-          location: "Front Door",
-          description: "Your package has been delivered."
-        }
-      ]
-    },
-    createdAt: "2023-10-10T08:30:00Z",
-    updatedAt: "2023-10-14T18:45:00Z"
+    orderStatus: "delivered",
+    createdAt: "2023-06-10T14:30:00Z",
+    updatedAt: "2023-06-12T09:15:00Z",
+    trackingNumber: "TRK123456789"
   },
   {
-    id: "ORD67890",
-    userId: "2", // John Doe
+    id: "2",
+    customerId: "3",
+    customerName: "Jane Smith",
+    customerEmail: "jane@example.com",
     items: [
       {
-        product: {
-          id: "5",
-          name: "Premium Microphone",
-          description: "Studio-quality condenser microphone for professional audio recording and podcasting.",
-          price: 149.99,
-          images: ["/images/products/microphone-1.jpg", "/images/products/microphone-2.jpg"],
-          category: "Audio",
-          featured: true,
-          inStock: true,
-          stockQuantity: 20,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        quantity: 1
-      },
-      {
-        product: {
-          id: "7",
-          name: "Wireless Headphones",
-          description: "Premium wireless headphones with noise cancellation and studio-quality sound.",
-          price: 249.99,
-          images: ["/images/products/headphones-1.jpg", "/images/products/headphones-2.jpg"],
-          category: "Audio",
-          featured: true,
-          inStock: true,
-          stockQuantity: 25,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        quantity: 1
+        productId: "6",
+        productName: "Video Editing Software",
+        quantity: 1,
+        unitPrice: 299.99,
+        totalPrice: 299.99
       }
     ],
-    status: "shipped",
+    shippingAddress: {
+      street: "456 Oak Ave",
+      city: "Seattle",
+      state: "WA",
+      zipCode: "98101",
+      country: "United States"
+    },
+    billingAddress: {
+      street: "456 Oak Ave",
+      city: "Seattle",
+      state: "WA",
+      zipCode: "98101",
+      country: "United States"
+    },
+    subtotal: 299.99,
+    tax: 27.00,
+    shippingCost: 0,
+    discount: 50.00,
+    total: 276.99,
+    paymentMethod: "PayPal",
     paymentStatus: "paid",
-    shippingMethod: "express",
-    shippingCost: 15.99,
-    shippingDetails: {
-      firstName: "John",
-      lastName: "Doe",
-      address: {
-        street: "123 Main St",
-        city: "Brooklyn",
-        state: "NY",
-        zipCode: "11201",
-        country: "United States"
-      },
-      email: "john@example.com",
-      phoneNumber: "555-123-4567"
-    },
-    subtotal: 399.98,
-    tax: 40.00,
-    total: 455.97,
-    tracking: {
-      carrier: "FedEx",
-      trackingNumber: "794605892290",
-      estimatedDeliveryDate: "2023-11-25",
-      trackingUrl: "https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=794605892290",
-      events: [
-        {
-          date: "2023-11-20T10:15:00Z",
-          status: "Order Processed",
-          description: "Your order has been processed and is ready for shipment."
-        },
-        {
-          date: "2023-11-21T09:30:00Z",
-          status: "Shipped",
-          location: "Distribution Center",
-          description: "Your order has been shipped."
-        },
-        {
-          date: "2023-11-23T14:20:00Z",
-          status: "In Transit",
-          location: "Regional Hub",
-          description: "Your package is in transit to the delivery location."
-        }
-      ]
-    },
-    createdAt: "2023-11-20T10:15:00Z",
-    updatedAt: "2023-11-23T14:20:00Z"
+    orderStatus: "processing",
+    createdAt: "2023-06-15T10:45:00Z",
+    updatedAt: "2023-06-15T10:45:00Z"
   },
   {
-    id: "ORD54321",
-    userId: "3", // Jane Smith
+    id: "3",
+    customerId: "2",
+    customerName: "John Doe",
+    customerEmail: "john@example.com",
     items: [
       {
-        product: {
-          id: "3",
-          name: "Drawing Tablet",
-          description: "Professional drawing tablet with pressure sensitivity and wireless connectivity for digital artists.",
-          price: 349.99,
-          images: ["/images/products/tablet-1.jpg", "/images/products/tablet-2.jpg"],
-          category: "Hardware",
-          featured: false,
-          inStock: true,
-          stockQuantity: 15,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        quantity: 1
+        productId: "8",
+        productName: "Portable SSD Drive",
+        quantity: 1,
+        unitPrice: 179.99,
+        totalPrice: 179.99
+      },
+      {
+        productId: "10",
+        productName: "Color Calibration Tool",
+        quantity: 1,
+        unitPrice: 199.99,
+        totalPrice: 199.99
       }
     ],
-    status: "processing",
+    shippingAddress: {
+      street: "123 Main St",
+      city: "Brooklyn",
+      state: "NY",
+      zipCode: "11201",
+      country: "United States"
+    },
+    billingAddress: {
+      street: "123 Main St",
+      city: "Brooklyn",
+      state: "NY",
+      zipCode: "11201",
+      country: "United States"
+    },
+    subtotal: 379.98,
+    tax: 34.20,
+    shippingCost: 12.50,
+    discount: 0,
+    total: 426.68,
+    paymentMethod: "Credit Card",
     paymentStatus: "paid",
-    shippingMethod: "priority",
-    shippingCost: 9.99,
-    shippingDetails: {
-      firstName: "Jane",
-      lastName: "Smith",
-      address: {
-        street: "456 Oak Ave",
-        city: "Seattle",
-        state: "WA",
-        zipCode: "98101",
-        country: "United States"
-      },
-      email: "jane@example.com",
-      phoneNumber: "555-987-6543"
+    orderStatus: "shipped",
+    createdAt: "2023-07-05T16:20:00Z",
+    updatedAt: "2023-07-06T09:10:00Z",
+    trackingNumber: "TRK987654321"
+  },
+  {
+    id: "4",
+    customerId: "4",
+    customerName: "Emily Johnson",
+    customerEmail: "emily@example.com",
+    items: [
+      {
+        productId: "3",
+        productName: "Drawing Tablet",
+        quantity: 1,
+        unitPrice: 349.99,
+        totalPrice: 349.99
+      }
+    ],
+    shippingAddress: {
+      street: "789 Pine St",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94101",
+      country: "United States"
+    },
+    billingAddress: {
+      street: "789 Pine St",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94101",
+      country: "United States"
     },
     subtotal: 349.99,
-    tax: 35.00,
-    total: 394.98,
-    tracking: {
-      carrier: "USPS",
-      trackingNumber: "9400123456789123456781",
-      events: [
-        {
-          date: "2023-12-01T11:20:00Z",
-          status: "Order Processed",
-          description: "Your order has been processed and is ready for shipment."
-        },
-        {
-          date: "2023-12-02T14:30:00Z",
-          status: "Processing",
-          location: "Warehouse",
-          description: "Your order is being prepared for shipment."
-        }
-      ]
+    tax: 31.50,
+    shippingCost: 15.00,
+    discount: 0,
+    total: 396.49,
+    paymentMethod: "Credit Card",
+    paymentStatus: "pending",
+    orderStatus: "pending",
+    createdAt: "2023-07-20T12:30:00Z",
+    updatedAt: "2023-07-20T12:30:00Z"
+  },
+  {
+    id: "5",
+    customerId: "5",
+    customerName: "Michael Brown",
+    customerEmail: "michael@example.com",
+    items: [
+      {
+        productId: "2",
+        productName: "Graphic Design Software",
+        quantity: 1,
+        unitPrice: 199.99,
+        totalPrice: 199.99
+      },
+      {
+        productId: "7",
+        productName: "Wireless Headphones",
+        quantity: 1,
+        unitPrice: 249.99,
+        totalPrice: 249.99
+      }
+    ],
+    shippingAddress: {
+      street: "101 Maple Dr",
+      city: "Austin",
+      state: "TX",
+      zipCode: "78701",
+      country: "United States"
     },
-    createdAt: "2023-12-01T11:20:00Z",
-    updatedAt: "2023-12-02T14:30:00Z"
+    billingAddress: {
+      street: "101 Maple Dr",
+      city: "Austin",
+      state: "TX",
+      zipCode: "78701",
+      country: "United States"
+    },
+    subtotal: 449.98,
+    tax: 37.12,
+    shippingCost: 15.00,
+    discount: 20.00,
+    total: 482.10,
+    paymentMethod: "PayPal",
+    paymentStatus: "paid",
+    orderStatus: "shipped",
+    createdAt: "2023-07-15T09:15:00Z",
+    updatedAt: "2023-07-16T14:30:00Z",
+    trackingNumber: "TRK456789123"
   }
 ];
 
-// Helper functions for orders
-
-// Get all orders for a user
-export function getUserOrders(userId: string): Order[] {
-  return orders.filter(order => order.userId === userId);
+// Helper functions
+export function getAllOrders(): Order[] {
+  return orders;
 }
 
-// Get order by ID
-export function getOrderById(orderId: string): Order | undefined {
-  return orders.find(order => order.id === orderId);
+export function getOrderById(id: string): Order | undefined {
+  return orders.find(order => order.id === id);
 }
 
-// Create a new order
-export function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Order {
-  const newOrder: Order = {
-    ...orderData,
-    id: `ORD${Math.floor(Math.random() * 90000) + 10000}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  orders.push(newOrder);
-  return newOrder;
+export function getOrdersByCustomerId(customerId: string): Order[] {
+  return orders.filter(order => order.customerId === customerId);
 }
 
-// Update order status
-export function updateOrderStatus(orderId: string, status: OrderStatus): Order | null {
-  const orderIndex = orders.findIndex(o => o.id === orderId);
-  
-  if (orderIndex === -1) return null;
+export function getOrdersByStatus(status: OrderStatus): Order[] {
+  return orders.filter(order => order.orderStatus === status);
+}
+
+export function updateOrderStatus(id: string, status: OrderStatus): Order | undefined {
+  const orderIndex = orders.findIndex(order => order.id === id);
+  if (orderIndex === -1) return undefined;
   
   orders[orderIndex] = {
     ...orders[orderIndex],
-    status,
+    orderStatus: status,
     updatedAt: new Date().toISOString()
   };
   
   return orders[orderIndex];
 }
 
-// Add tracking information to an order
-export function addTrackingInfo(orderId: string, trackingInfo: TrackingInfo): Order | null {
-  const orderIndex = orders.findIndex(o => o.id === orderId);
-  
-  if (orderIndex === -1) return null;
+export function updateTrackingNumber(id: string, trackingNumber: string): Order | undefined {
+  const orderIndex = orders.findIndex(order => order.id === id);
+  if (orderIndex === -1) return undefined;
   
   orders[orderIndex] = {
     ...orders[orderIndex],
-    tracking: trackingInfo,
-    updatedAt: new Date().toISOString()
-  };
-  
-  return orders[orderIndex];
-}
-
-// Add tracking event to an order
-export function addTrackingEvent(orderId: string, event: { date: string; status: string; location?: string; description: string }): Order | null {
-  const orderIndex = orders.findIndex(o => o.id === orderId);
-  
-  if (orderIndex === -1 || !orders[orderIndex].tracking) return null;
-  
-  orders[orderIndex] = {
-    ...orders[orderIndex],
-    tracking: {
-      ...orders[orderIndex].tracking!,
-      events: [...orders[orderIndex].tracking!.events, event]
-    },
+    trackingNumber,
     updatedAt: new Date().toISOString()
   };
   

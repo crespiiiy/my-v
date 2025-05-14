@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
 import { getFeaturedProducts } from "../models/product";
+import { getHomepageSettings, getSettingValue } from "../models/settings";
 import ProductCard from "../components/ProductCard";
 
 export function meta({}: Route.MetaArgs) {
@@ -12,6 +13,14 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const featuredProducts = getFeaturedProducts();
+  const homepageSettings = getHomepageSettings();
+  
+  // Get hero content from settings or use defaults
+  const heroTitle = homepageSettings.hero_title || "Premium Tools for Creative Professionals";
+  const heroSubtitle = homepageSettings.hero_subtitle || 
+    "Discover our collection of high-quality products designed to enhance your creative workflow.";
+  const heroImageUrl = homepageSettings.hero_image_url || 
+    "https://placehold.co/800x600/111827/ffffff?text=Creative+Tools";
 
   return (
     <div className="space-y-16">
@@ -21,10 +30,10 @@ export default function Home() {
           <div className="container mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Premium Tools for Creative Professionals
+                {heroTitle}
               </h1>
               <p className="text-lg text-gray-300 mb-6">
-                Discover our collection of high-quality products designed to enhance your creative workflow.
+                {heroSubtitle}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -44,7 +53,7 @@ export default function Home() {
             <div className="md:w-1/2 relative">
               <div className="aspect-[4/3] bg-gray-800 rounded-lg overflow-hidden shadow-xl">
                 <img
-                  src="https://placehold.co/800x600/111827/ffffff?text=Creative+Tools"
+                  src={heroImageUrl}
                   alt="Creative Tools"
                   className="w-full h-full object-cover"
                 />

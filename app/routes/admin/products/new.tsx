@@ -27,6 +27,7 @@ export default function NewProduct() {
   
   const [images, setImages] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -70,6 +71,34 @@ export default function NewProduct() {
   
   const handleRemoveImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+  
+  // Handle file upload for images
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // In a real application, you would upload this file to a server
+    // Here we're simulating the upload and generating a local URL
+    setIsUploading(true);
+    
+    // Clear any previous errors
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.imageUrl;
+      delete newErrors.images;
+      return newErrors;
+    });
+    
+    // Simulate upload delay
+    setTimeout(() => {
+      // Create a fake URL (in a real app, this would be the URL from your server/CDN)
+      const fakeUploadedUrl = URL.createObjectURL(file);
+      
+      // Add the new image URL to the images array
+      setImages((prev) => [...prev, fakeUploadedUrl]);
+      setIsUploading(false);
+    }, 1500);
   };
   
   const validateForm = () => {
@@ -318,59 +347,83 @@ export default function NewProduct() {
             <label className="block text-sm font-medium mb-2">
               Product Images *
             </label>
-            <div className="flex flex-col space-y-4">
-              <div className="flex">
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Enter image URL"
-                  className={`flex-grow px-4 py-2 bg-gray-700 border ${
-                    errors.imageUrl ? "border-red-500" : "border-gray-600"
-                  } rounded-l-md text-white`}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddImage}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md transition-colors"
-                >
-                  Add
-                </button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <div>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Enter image URL"
+                    className={`flex-1 px-4 py-2 bg-gray-700 border ${
+                      errors.imageUrl ? "border-red-500" : "border-gray-600"
+                    } rounded-l-md text-white`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddImage}
+                    disabled={!imageUrl}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-r-md"
+                  >
+                    Add
+                  </button>
+                </div>
+                {errors.imageUrl && (
+                  <p className="mt-1 text-sm text-red-500">{errors.imageUrl}</p>
+                )}
               </div>
-              {errors.imageUrl && (
-                <p className="mt-1 text-sm text-red-500">{errors.imageUrl}</p>
-              )}
               
-              {images.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={image}
-                        alt={`Product image ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-gray-700 border border-gray-600 rounded-md p-8 text-center">
-                  <p className="text-gray-400">No images added yet</p>
-                </div>
-              )}
-              {errors.images && (
-                <p className="mt-1 text-sm text-red-500">{errors.images}</p>
-              )}
+              <div>
+                <label className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md cursor-pointer transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {isUploading ? "Uploading..." : "Upload Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploading}
+                    onChange={handleImageUpload}
+                  />
+                </label>
+              </div>
             </div>
+            
+            {errors.images && (
+              <p className="mt-1 text-sm text-red-500">{errors.images}</p>
+            )}
+            
+            {images.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                {images.map((img, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square bg-gray-700 rounded-md overflow-hidden">
+                      <img
+                        src={img}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-700 border border-gray-600 rounded-md p-8 text-center">
+                <p className="text-gray-400 mb-2">No images added yet</p>
+                <p className="text-sm text-gray-500">Add images via URL or upload from your device</p>
+              </div>
+            )}
           </div>
           
           {/* Form Actions */}
