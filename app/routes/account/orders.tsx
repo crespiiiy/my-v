@@ -43,7 +43,7 @@ export default function OrderHistory() {
   };
   
   // Get status badge color
-  const getStatusBadgeColor = (status: Order["status"]) => {
+  const getStatusBadgeColor = (status: Order["orderStatus"]) => {
     switch (status) {
       case "pending":
         return "bg-yellow-600 text-yellow-100";
@@ -122,8 +122,8 @@ export default function OrderHistory() {
                       <div>
                         <div className="flex items-center">
                           <h3 className="font-semibold">Order #{order.id}</h3>
-                          <span className={`ml-3 px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(order.status)}`}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          <span className={`ml-3 px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(order.orderStatus)}`}>
+                            {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
                           </span>
                         </div>
                         <p className="text-gray-400 text-sm mt-1">
@@ -160,16 +160,16 @@ export default function OrderHistory() {
                               Shipping Address
                             </h4>
                             <p className="text-sm">
-                              {order.shippingDetails.firstName} {order.shippingDetails.lastName}
+                              {order.customerName}
                             </p>
                             <p className="text-sm">
-                              {order.shippingDetails.address.street}
+                              {order.shippingAddress.street}
                             </p>
                             <p className="text-sm">
-                              {order.shippingDetails.address.city}, {order.shippingDetails.address.state} {order.shippingDetails.address.zipCode}
+                              {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
                             </p>
                             <p className="text-sm">
-                              {order.shippingDetails.address.country}
+                              {order.shippingAddress.country}
                             </p>
                           </div>
                           
@@ -222,20 +222,20 @@ export default function OrderHistory() {
                             >
                               <div className="w-16 h-16 rounded-md overflow-hidden mr-4">
                                 <img
-                                  src={item.product.images[0]}
-                                  alt={item.product.name}
+                                  src={`/images/products/${item.productId}.jpg`}
+                                  alt={item.productName}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
                               <div className="flex-grow">
-                                <h5 className="font-medium">{item.product.name}</h5>
+                                <h5 className="font-medium">{item.productName}</h5>
                                 <p className="text-gray-400 text-sm">
                                   Quantity: {item.quantity}
                                 </p>
                               </div>
                               <div className="text-right">
                                 <p className="font-medium">
-                                  ${(item.product.price * item.quantity).toFixed(2)}
+                                  ${item.totalPrice.toFixed(2)}
                                 </p>
                               </div>
                             </div>
@@ -243,100 +243,36 @@ export default function OrderHistory() {
                         </div>
                         
                         {/* Tracking Information */}
-                        {order.tracking && (
+                        {order.trackingNumber && (
                           <div className="mt-4">
                             <h4 className="font-medium mb-2">Tracking Information</h4>
-                            <div className="bg-gray-800 rounded-md p-3">
-                              <div className="flex flex-col sm:flex-row justify-between mb-4">
+                            <div className="bg-gray-800 rounded-md p-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                  <p className="text-sm font-medium text-gray-400">
+                                  <h5 className="text-sm font-medium text-gray-400 mb-1">
                                     Carrier
-                                  </p>
-                                  <p>{order.tracking.carrier}</p>
+                                  </h5>
+                                  <p>Standard Shipping</p>
                                 </div>
-                                <div className="mt-2 sm:mt-0">
-                                  <p className="text-sm font-medium text-gray-400">
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-400 mb-1">
                                     Tracking Number
-                                  </p>
-                                  <p>{order.tracking.trackingNumber}</p>
+                                  </h5>
+                                  <p>{order.trackingNumber}</p>
                                 </div>
-                                {order.tracking.estimatedDeliveryDate && (
-                                  <div className="mt-2 sm:mt-0">
-                                    <p className="text-sm font-medium text-gray-400">
-                                      Estimated Delivery
-                                    </p>
-                                    <p>
-                                      {formatDate(order.tracking.estimatedDeliveryDate)}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
                               
-                              {/* Tracking Timeline */}
-                              <div className="space-y-4">
-                                {order.tracking.events.map((event, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex"
-                                  >
-                                    <div className="mr-3 relative">
-                                      <div
-                                        className={`h-5 w-5 rounded-full border-2 ${
-                                          index === 0
-                                            ? "bg-green-500 border-green-600"
-                                            : "border-gray-600"
-                                        } flex items-center justify-center`}
-                                      >
-                                        {index === 0 && (
-                                          <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-3 w-3 text-white"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2}
-                                              d="M5 13l4 4L19 7"
-                                            />
-                                          </svg>
-                                        )}
-                                      </div>
-                                      {index < order.tracking.events.length - 1 && (
-                                        <div className="absolute top-5 left-2.5 -ml-px h-full w-0.5 bg-gray-600"></div>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-medium">
-                                        {event.status}
-                                        {event.location && ` - ${event.location}`}
-                                      </p>
-                                      <p className="text-sm text-gray-400">
-                                        {formatDate(event.date)} - {new Date(event.date).toLocaleTimeString()}
-                                      </p>
-                                      <p className="text-sm mt-1">
-                                        {event.description}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
+                              <div className="mt-4 flex justify-center border-t border-gray-700 pt-4">
+                                <button
+                                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white text-sm transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(`https://track.carrier.com?number=${order.trackingNumber}`, '_blank');
+                                  }}
+                                >
+                                  Track Package
+                                </button>
                               </div>
-                              
-                              {/* Track order button */}
-                              {order.tracking.trackingUrl && (
-                                <div className="mt-4">
-                                  <a
-                                    href={order.tracking.trackingUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
-                                  >
-                                    Track on {order.tracking.carrier}
-                                  </a>
-                                </div>
-                              )}
                             </div>
                           </div>
                         )}
@@ -352,7 +288,7 @@ export default function OrderHistory() {
                             View Order Details
                           </button>
                           
-                          {order.status === "delivered" && (
+                          {order.orderStatus === "delivered" && (
                             <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md text-sm">
                               Leave a Review
                             </button>
