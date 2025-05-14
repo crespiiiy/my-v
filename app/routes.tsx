@@ -43,6 +43,9 @@ const componentImports: Record<string, () => Promise<any>> = {
   "routes/admin/orders": () => import("./routes/admin/orders"),
   "routes/admin/customers": () => import("./routes/admin/customers"),
   "routes/admin/settings": () => import("./routes/admin/settings"),
+  "routes/privacy-policy": () => import("./routes/privacy-policy"),
+  "routes/terms-of-service": () => import("./routes/terms-of-service"),
+  "routes/refund-policy": () => import("./routes/refund-policy"),
 };
 
 // Helper function to create route objects with component import
@@ -113,6 +116,11 @@ const rootRoute = {
     // Account routes
     createRoute("account", "routes/account/index"),
     createRoute("account/orders", "routes/account/orders"),
+    
+    // Legal/Policy routes
+    createRoute("privacy-policy", "routes/privacy-policy"),
+    createRoute("terms-of-service", "routes/terms-of-service"),
+    createRoute("refund-policy", "routes/refund-policy"),
     
     // Admin routes
     createRoute("admin", "routes/admin/index"),

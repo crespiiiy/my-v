@@ -1,6 +1,27 @@
 // API configuration
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.creative-store.com';
+// Set to false when connecting to real API
 const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK_DATA === 'true' || true;
+
+/**
+ * PRODUCTION PREPARATION:
+ * 
+ * To connect to a real backend:
+ * 1. Set up your backend service (Firebase, Supabase, custom Node.js, etc.)
+ * 2. Change USE_MOCK_DATA to false
+ * 3. Update API_URL to point to your real API
+ * 4. Set environment variables in your hosting platform
+ * 
+ * Recommended backend options:
+ * - Firebase: Great for quick setup, auth, and realtime features
+ * - Supabase: Open source Firebase alternative with PostgreSQL
+ * - MongoDB Atlas + Express: Flexible NoSQL solution
+ * - Strapi: Headless CMS for content management
+ *
+ * Example .env setup:
+ * REACT_APP_API_URL=https://your-real-api.com
+ * REACT_APP_USE_MOCK_DATA=false
+ */
 
 // Import mock data (for development/fallback)
 import { products as mockProducts } from '../models/product';

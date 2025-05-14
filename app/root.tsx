@@ -9,6 +9,7 @@ import {
 
 import "./app.css";
 import SiteLayout from "./components/Layout";
+import AnalyticsAndSecurity from "./components/AnalyticsAndSecurity";
 
 // Define Route types inline since +types directory doesn't exist
 namespace Route {
@@ -66,7 +67,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <DocumentHydrationFix />
       </head>
       <body>
-        {children}
+            {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -79,6 +80,10 @@ export default function App() {
   return (
     <SiteLayout>
       <Outlet />
+      <AnalyticsAndSecurity 
+        googleAnalyticsId={process.env.REACT_APP_GA_ID}
+        facebookPixelId={process.env.REACT_APP_FB_PIXEL_ID}
+      />
     </SiteLayout>
   );
 }

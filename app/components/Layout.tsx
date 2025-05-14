@@ -327,6 +327,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
             <p>&copy; {new Date().getFullYear()} Creative. All rights reserved.</p>
+            <div className="flex justify-center space-x-4 mt-4">
+              <Link to="/privacy-policy" className="hover:text-blue-400 transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="/terms-of-service" className="hover:text-blue-400 transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/refund-policy" className="hover:text-blue-400 transition-colors">
+                Refund Policy
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
