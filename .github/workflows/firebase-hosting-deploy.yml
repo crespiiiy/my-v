@@ -15,6 +15,11 @@ jobs:
           node-version: "18"
           cache: "npm"
       
+      - name: Remove package-lock.json and node_modules to fix Rollup issue
+        run: |
+          rm -f package-lock.json
+          rm -rf node_modules
+      
       - name: Install dependencies
         run: npm install --legacy-peer-deps
       
