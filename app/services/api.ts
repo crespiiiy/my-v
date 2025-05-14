@@ -1,32 +1,28 @@
 // API configuration
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.creative-store.com';
-// Set to false when connecting to real API
-const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK_DATA === 'true' || true;
+// Set to false for production to use real API
+const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK_DATA === 'true' || false;
 
 /**
- * PRODUCTION PREPARATION:
+ * PRODUCTION CONFIGURATION:
  * 
- * To connect to a real backend:
- * 1. Set up your backend service (Firebase, Supabase, custom Node.js, etc.)
- * 2. Change USE_MOCK_DATA to false
- * 3. Update API_URL to point to your real API
- * 4. Set environment variables in your hosting platform
+ * Your backend is now configured to use real data from Firebase.
+ * Make sure your Firebase credentials are properly set up in firebase.ts
+ * and that you have the proper security rules in place.
  * 
- * Recommended backend options:
- * - Firebase: Great for quick setup, auth, and realtime features
- * - Supabase: Open source Firebase alternative with PostgreSQL
- * - MongoDB Atlas + Express: Flexible NoSQL solution
- * - Strapi: Headless CMS for content management
- *
- * Example .env setup:
+ * Environment variables in production:
  * REACT_APP_API_URL=https://your-real-api.com
  * REACT_APP_USE_MOCK_DATA=false
  */
 
-// Import mock data (for development/fallback)
-import { products as mockProducts } from '../models/product';
-import { users as mockUsers } from '../models/user';
-import { orders as mockOrders } from '../models/order';
+// Import Firebase services for data handling
+import { db } from './firebase';
+import { getDocs, getDoc, collection, doc, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+
+// Types import (keep these for type information)
+import { products as mockProductTypes } from '../models/product';
+import { users as mockUserTypes } from '../models/user';
+import { orders as mockOrderTypes } from '../models/order';
 
 // Utility for handling API requests
 async function apiRequest<T>(
@@ -36,68 +32,93 @@ async function apiRequest<T>(
   useAuth: boolean = true
 ): Promise<T> {
   if (USE_MOCK_DATA) {
-    // Return mock data with artificial delay to simulate network
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Handle mock data responses based on endpoint
-        if (endpoint.includes('/products')) {
-          if (endpoint === '/products') {
-            resolve(mockProducts as unknown as T);
-          } else {
-            const id = endpoint.split('/').pop();
-            const product = mockProducts.find(p => p.id === id);
-            resolve(product as unknown as T);
-          }
-        } else if (endpoint.includes('/users')) {
-          if (endpoint === '/users') {
-            resolve(mockUsers as unknown as T);
-          } else {
-            const id = endpoint.split('/').pop();
-            const user = mockUsers.find(u => u.id === id);
-            resolve(user as unknown as T);
-          }
-        } else if (endpoint.includes('/orders')) {
-          if (endpoint === '/orders') {
-            resolve(mockOrders as unknown as T);
-          } else {
-            const id = endpoint.split('/').pop();
-            const order = mockOrders.find(o => o.id === id);
-            resolve(order as unknown as T);
-          }
-        } else {
-          // Default mock response
-          resolve({} as T);
-        }
-      }, 300); // Simulate network delay
-    });
+    console.warn('Using mock data. For production, set USE_MOCK_DATA to false.');
+    // Return empty data in production mode as fallback
+    return {} as T;
   }
 
-  // Real API implementation
+  // Real API implementation with Firebase
   try {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    // Extract collection and ID from endpoint
+    const parts = endpoint.split('/').filter(p => p);
+    const collectionName = parts[0];
+    
+    if (!collectionName) {
+      throw new Error('Invalid endpoint format');
+    }
 
-    // Add authentication if needed and available
-    if (useAuth) {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    switch (method) {
+      case 'GET': {
+        // Handle specific GET patterns
+        if (parts.length === 1) {
+          // Get all documents from a collection
+          const snapshot = await getDocs(collection(db, collectionName));
+          return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as unknown as T;
+        } else if (parts.length === 2) {
+          // Get a specific document
+          const docRef = doc(db, collectionName, parts[1]);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            return {
+              id: docSnap.id,
+              ...docSnap.data()
+            } as unknown as T;
+          } else {
+            throw new Error('Document does not exist');
+          }
+        } else if (parts.length >= 3 && parts[1] === 'check') {
+          // Special case for checking if item exists
+          const checkId = parts[2];
+          const q = query(collection(db, collectionName), where("productId", "==", checkId));
+          const snapshot = await getDocs(q);
+          return (!snapshot.empty) as unknown as T;
+        }
+        break;
+      }
+
+      case 'POST': {
+        // Create a new document
+        const docRef = await addDoc(collection(db, collectionName), data);
+        return {
+          id: docRef.id,
+          ...data
+        } as unknown as T;
+      }
+
+      case 'PUT': {
+        // Update an existing document
+        if (parts.length < 2) {
+          throw new Error('Document ID is required for updates');
+        }
+        
+        const docRef = doc(db, collectionName, parts[1]);
+        await updateDoc(docRef, data);
+        
+        // Get updated document
+        const updatedDoc = await getDoc(docRef);
+        return {
+          id: updatedDoc.id,
+          ...updatedDoc.data()
+        } as unknown as T;
+      }
+
+      case 'DELETE': {
+        // Delete a document
+        if (parts.length < 2) {
+          throw new Error('Document ID is required for deletion');
+        }
+        
+        const docRef = doc(db, collectionName, parts[1]);
+        await deleteDoc(docRef);
+        return {} as T;
       }
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API error: ${response.status}`);
-    }
-
-    return await response.json();
+    throw new Error(`Unsupported operation: ${method} ${endpoint}`);
   } catch (error) {
     console.error('API request failed:', error);
     throw error;
@@ -106,16 +127,16 @@ async function apiRequest<T>(
 
 // Product API
 export const ProductAPI = {
-  getAll: () => apiRequest<typeof mockProducts>('/products'),
-  getById: (id: string) => apiRequest<typeof mockProducts[0]>(`/products/${id}`),
-  getByCategory: (category: string) => apiRequest<typeof mockProducts>(`/products?category=${category}`),
-  getFeatured: () => apiRequest<typeof mockProducts>('/products?featured=true'),
-  getDiscounted: () => apiRequest<typeof mockProducts>('/products?discounted=true'),
-  search: (query: string) => apiRequest<typeof mockProducts>(`/products?search=${query}`),
-  create: (product: Omit<typeof mockProducts[0], 'id'>) => 
-    apiRequest<typeof mockProducts[0]>('/products', 'POST', product),
-  update: (id: string, product: Partial<typeof mockProducts[0]>) => 
-    apiRequest<typeof mockProducts[0]>(`/products/${id}`, 'PUT', product),
+  getAll: () => apiRequest<typeof mockProductTypes>('/products'),
+  getById: (id: string) => apiRequest<typeof mockProductTypes[0]>(`/products/${id}`),
+  getByCategory: (category: string) => apiRequest<typeof mockProductTypes>(`/products?category=${category}`),
+  getFeatured: () => apiRequest<typeof mockProductTypes>('/products?featured=true'),
+  getDiscounted: () => apiRequest<typeof mockProductTypes>('/products?discounted=true'),
+  search: (query: string) => apiRequest<typeof mockProductTypes>(`/products?search=${query}`),
+  create: (product: Omit<typeof mockProductTypes[0], 'id'>) => 
+    apiRequest<typeof mockProductTypes[0]>('/products', 'POST', product),
+  update: (id: string, product: Partial<typeof mockProductTypes[0]>) => 
+    apiRequest<typeof mockProductTypes[0]>(`/products/${id}`, 'PUT', product),
   delete: (id: string) => apiRequest<void>(`/products/${id}`, 'DELETE'),
   getAllCategories: () => apiRequest<string[]>('/products/categories'),
 };
@@ -123,13 +144,13 @@ export const ProductAPI = {
 // User API
 export const UserAPI = {
   login: (email: string, password: string) => 
-    apiRequest<{user: typeof mockUsers[0], token: string}>('/auth/login', 'POST', { email, password }, false),
+    apiRequest<{user: typeof mockUserTypes[0], token: string}>('/auth/login', 'POST', { email, password }, false),
   register: (userData: any) => 
-    apiRequest<{user: typeof mockUsers[0], token: string}>('/auth/register', 'POST', userData, false),
-  getCurrentUser: () => apiRequest<typeof mockUsers[0]>('/users/me'),
-  updateUser: (id: string, userData: Partial<typeof mockUsers[0]>) => 
-    apiRequest<typeof mockUsers[0]>(`/users/${id}`, 'PUT', userData),
-  getById: (id: string) => apiRequest<typeof mockUsers[0]>(`/users/${id}`),
+    apiRequest<{user: typeof mockUserTypes[0], token: string}>('/auth/register', 'POST', userData, false),
+  getCurrentUser: () => apiRequest<typeof mockUserTypes[0]>('/users/me'),
+  updateUser: (id: string, userData: Partial<typeof mockUserTypes[0]>) => 
+    apiRequest<typeof mockUserTypes[0]>(`/users/${id}`, 'PUT', userData),
+  getById: (id: string) => apiRequest<typeof mockUserTypes[0]>(`/users/${id}`),
   logout: () => {
     localStorage.removeItem('auth_token');
     return Promise.resolve();
@@ -138,12 +159,12 @@ export const UserAPI = {
 
 // Order API
 export const OrderAPI = {
-  create: (orderData: any) => apiRequest<typeof mockOrders[0]>('/orders', 'POST', orderData),
-  getAll: () => apiRequest<typeof mockOrders>('/orders'),
-  getById: (id: string) => apiRequest<typeof mockOrders[0]>(`/orders/${id}`),
-  getUserOrders: (userId: string) => apiRequest<typeof mockOrders>(`/users/${userId}/orders`),
+  create: (orderData: any) => apiRequest<typeof mockOrderTypes[0]>('/orders', 'POST', orderData),
+  getAll: () => apiRequest<typeof mockOrderTypes>('/orders'),
+  getById: (id: string) => apiRequest<typeof mockOrderTypes[0]>(`/orders/${id}`),
+  getUserOrders: (userId: string) => apiRequest<typeof mockOrderTypes>(`/users/${userId}/orders`),
   updateStatus: (id: string, status: string) => 
-    apiRequest<typeof mockOrders[0]>(`/orders/${id}/status`, 'PUT', { status }),
+    apiRequest<typeof mockOrderTypes[0]>(`/orders/${id}/status`, 'PUT', { status }),
 };
 
 // Review API

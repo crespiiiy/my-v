@@ -21,29 +21,23 @@ const firebaseConfig = {
   measurementId: "G-Q1B825VYVE" // معرف القياس (اختياري)
 };
 
-// Initialize Firebase only on client side
-let app: FirebaseApp | undefined;
-let analytics: Analytics | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
-let storage: FirebaseStorage | undefined;
+// Initialize Firebase
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+// Analytics is browser-only
+let analytics: Analytics | null = null;
 
-// Check if we're in a browser environment to avoid SSR issues
+// Initialize Firebase
+app = initializeApp(firebaseConfig);
+auth = getAuth(app);
+db = getFirestore(app);
+storage = getStorage(app);
+
+// Initialize browser-only services
 if (typeof window !== 'undefined') {
-  // Initialize Firebase
-  app = initializeApp(firebaseConfig);
-  
-  // Initialize Analytics
   analytics = getAnalytics(app);
-  
-  // Initialize Auth
-  auth = getAuth(app);
-  
-  // Initialize Firestore
-  db = getFirestore(app);
-  
-  // Initialize Storage
-  storage = getStorage(app);
 }
 
 export { app, analytics, auth, db, storage };
