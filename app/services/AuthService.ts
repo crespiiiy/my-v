@@ -251,4 +251,89 @@ export const firebaseUserToUserData = async (firebaseUser: FirebaseUser): Promis
     console.error('خطأ في تحويل مستخدم Firebase:', error);
     return null;
   }
+};
+
+/**
+ * ترقية مستخدم إلى مسؤول
+ */
+export const promoteUserToAdmin = async (userId: string): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    
+    // تحديث دور المستخدم في Firestore
+    await updateDoc(userRef, {
+      role: 'admin',
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log(`تمت ترقية المستخدم ${userId} إلى مسؤول بنجاح`);
+  } catch (error) {
+    console.error('خطأ في ترقية المستخدم إلى مسؤول:', error);
+    throw error;
+  }
+};
+
+/**
+ * إنشاء مستخدم إداري مباشرة (لإنشاء المسؤول الأول في النظام)
+ */
+export const createAdminUser = async (
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+  phoneNumber?: string,
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  }
+): Promise<UserData> => {
+  try {
+    // إنشاء المستخدم في Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // تعيين اسم المستخدم في الملف الشخصي
+    await updateProfile(user, {
+      displayName: `${firstName} ${lastName}`
+    });
+    
+    // إنشاء بيانات المستخدم في Firestore مع دور المسؤول مباشرة
+    const userData: UserData = {
+      id: user.uid,
+      email: user.email || email,
+      firstName,
+      lastName,
+      role: 'admin', // تعيين الدور كمسؤول مباشرة
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      phoneNumber,
+      address
+    };
+    
+    // حفظ بيانات المستخدم في Firestore
+    await setDoc(doc(db, 'users', user.uid), userData);
+    
+    console.log(`تم إنشاء المستخدم الإداري بنجاح: ${email}`);
+    return userData;
+  } catch (error) {
+    console.error('خطأ في إنشاء المستخدم الإداري:', error);
+    throw error;
+  }
+};
+
+export default {
+  registerUser,
+  loginUser,
+  logoutUser,
+  resetPassword,
+  updateUserInfo,
+  updateUserEmail,
+  updateUserPassword,
+  getCurrentUserData,
+  firebaseUserToUserData,
+  promoteUserToAdmin,
+  createAdminUser
 }; 

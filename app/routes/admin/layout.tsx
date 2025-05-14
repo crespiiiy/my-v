@@ -1,15 +1,23 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function AdminLayout() {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   
+  // إنشاء قائمة الروابط الأساسية
   const navLinks = [
     { name: "Dashboard", path: "/admin" },
     { name: "Products", path: "/admin/products" },
     { name: "Orders", path: "/admin/orders" },
     { name: "Customers", path: "/admin/customers" },
-    { name: "Settings", path: "/admin/settings" },
+    { name: "Store Settings", path: "/admin/settings" },
   ];
+
+  // إضافة رابط إعدادات المسؤول فقط للمسؤولين
+  if (isAdmin) {
+    navLinks.push({ name: "Admin Tools", path: "/admin/admin-settings" });
+  }
 
   return (
     <div>
