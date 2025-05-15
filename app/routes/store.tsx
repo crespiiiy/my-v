@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import type { Route } from "./+types/store";
 import { products, getAllCategories } from "../models/product";
 import ProductCard from "../components/ProductCard";
@@ -18,6 +19,9 @@ export default function Store() {
   const [showDiscounted, setShowDiscounted] = useState(false);
 
   const categories = getAllCategories();
+  
+  // Count number of courses available
+  const coursesCount = products.filter(product => product.category === "Courses").length;
   
   // Filter products based on selected filters
   const filteredProducts = products.filter((product) => {
@@ -70,6 +74,34 @@ export default function Store() {
         <p className="text-gray-400">
           Browse our collection of premium products for creative professionals.
         </p>
+      </div>
+      
+      {/* Courses Banner */}
+      <div className="mb-8 bg-gradient-to-r from-blue-700 to-indigo-700 rounded-lg overflow-hidden">
+        <div className="p-6 md:p-8 flex flex-col md:flex-row items-center">
+          <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Premium Programming Courses</h2>
+            <p className="text-gray-200 mb-4">
+              Enhance your skills with {coursesCount} high-quality courses from top global instructors. Lifetime access to comprehensive tutorials and resources.
+            </p>
+            <Link
+              to="/store/courses"
+              className="inline-flex items-center bg-white text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors font-medium"
+            >
+              Browse Courses
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </Link>
+          </div>
+          <div className="md:w-1/3 flex justify-center">
+            <div className="w-32 h-32 md:w-40 md:h-40 bg-blue-600 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 md:h-20 md:w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
