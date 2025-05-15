@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/edit";
 import { getProductById, getAllCategories } from "../../../models/product";
+import ImageUploader from "../../../components/ImageUploader";
 
 export function meta({ params }: Route.MetaArgs) {
   const product = getProductById(params.productId);
@@ -30,6 +31,7 @@ export default function EditProduct() {
   
   const [images, setImages] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [isUploadMode, setIsUploadMode] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -89,6 +91,15 @@ export default function EditProduct() {
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors.imageUrl;
+      return newErrors;
+    });
+  };
+  
+  const handleImageUploaded = (uploadedImageUrl: string) => {
+    setImages((prev) => [...prev, uploadedImageUrl]);
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.images;
       return newErrors;
     });
   };
@@ -355,24 +366,43 @@ export default function EditProduct() {
               Product Images *
             </label>
             <div className="flex flex-col space-y-4">
-              <div className="flex">
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Enter image URL"
-                  className={`flex-grow px-4 py-2 bg-gray-700 border ${
-                    errors.imageUrl ? "border-red-500" : "border-gray-600"
-                  } rounded-l-md text-white`}
-                />
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-sm text-gray-400">Add images via URL or upload from your device</div>
                 <button
                   type="button"
-                  onClick={handleAddImage}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md transition-colors"
+                  onClick={() => setIsUploadMode(!isUploadMode)}
+                  className="text-xs text-blue-400 hover:text-blue-300 ml-2"
                 >
-                  Add
+                  {isUploadMode ? 'Use URL instead' : 'Upload from device'}
                 </button>
               </div>
+              
+              {isUploadMode ? (
+                <ImageUploader
+                  initialImageUrl=""
+                  onImageChange={handleImageUploaded}
+                />
+              ) : (
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Enter image URL"
+                    className={`flex-grow px-4 py-2 bg-gray-700 border ${
+                      errors.imageUrl ? "border-red-500" : "border-gray-600"
+                    } rounded-l-md text-white`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddImage}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+              
               {errors.imageUrl && (
                 <p className="mt-1 text-sm text-red-500">{errors.imageUrl}</p>
               )}
