@@ -8,8 +8,26 @@ export interface StoreSetting {
   updatedAt: string;
 }
 
+// Try to load settings from localStorage or use default settings
+const loadSettings = (): StoreSetting[] => {
+  if (typeof window !== 'undefined') {
+    const savedSettings = localStorage.getItem('storeSettings');
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  }
+  return defaultStoreSettings;
+};
+
+// Save settings to localStorage
+const saveSettings = (settings: StoreSetting[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('storeSettings', JSON.stringify(settings));
+  }
+};
+
 // Sample store settings
-export const storeSettings: StoreSetting[] = [
+export const defaultStoreSettings: StoreSetting[] = [
   // General Settings
   {
     id: "1",
@@ -196,6 +214,9 @@ export const storeSettings: StoreSetting[] = [
   }
 ];
 
+// Initialize settings from localStorage or defaults
+export let storeSettings = loadSettings();
+
 // Helper functions
 export function getAllSettings(): StoreSetting[] {
   return storeSettings;
@@ -223,6 +244,9 @@ export function updateSetting(key: string, value: string): StoreSetting | undefi
     value,
     updatedAt: new Date().toISOString()
   };
+  
+  // Save to localStorage
+  saveSettings(storeSettings);
   
   return storeSettings[settingIndex];
 }

@@ -19,8 +19,9 @@ export default function Home() {
   const heroTitle = homepageSettings.hero_title || "Premium Tools for Creative Professionals";
   const heroSubtitle = homepageSettings.hero_subtitle || 
     "Discover our collection of high-quality products designed to enhance your creative workflow.";
-  const heroImageUrl = homepageSettings.hero_image_url || 
-    "https://raw.githubusercontent.com/crespiiiy/my-v/main/public/images/Developer.webp";
+  const heroImageUrl = homepageSettings.hero_image_url && homepageSettings.hero_image_url.startsWith("data:image") 
+    ? homepageSettings.hero_image_url
+    : "/images/Developer.webp";
 
   return (
     <div className="space-y-16">

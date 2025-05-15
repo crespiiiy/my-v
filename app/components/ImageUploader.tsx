@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 
 interface ImageUploaderProps {
@@ -6,11 +6,27 @@ interface ImageUploaderProps {
   onImageChange: (imageUrl: string) => void;
 }
 
+// Helper function to convert file to base64 for more persistent storage
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const ImageUploader = ({ initialImageUrl = '', onImageChange }: ImageUploaderProps) => {
   const [imageUrl, setImageUrl] = useState(initialImageUrl);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isUrlInput, setIsUrlInput] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialImageUrl) {
+      setImageUrl(initialImageUrl);
+    }
+  }, [initialImageUrl]);
 
   const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
@@ -18,18 +34,21 @@ const ImageUploader = ({ initialImageUrl = '', onImageChange }: ImageUploaderPro
     onImageChange(url);
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadedImage(file);
-      const localUrl = URL.createObjectURL(file);
-      setImageUrl(localUrl);
-      onImageChange(localUrl);
-      
-      // Here you would typically upload the file to your server or storage
-      // and then use the returned URL
-      // For now, we're just using a local object URL for preview
-      console.log('File selected:', file.name);
+      try {
+        setUploadedImage(file);
+        
+        // Convert to base64 for more persistent storage
+        const base64Image = await fileToBase64(file);
+        setImageUrl(base64Image);
+        onImageChange(base64Image);
+        
+        console.log('File selected and converted to base64:', file.name);
+      } catch (error) {
+        console.error('Error converting file to base64:', error);
+      }
     }
   };
 
