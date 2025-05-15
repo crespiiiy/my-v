@@ -361,81 +361,104 @@ export default function EditProduct() {
           </div>
           
           {/* Product Images */}
-          <div className="mb-6">
+          <div>
             <label className="block text-sm font-medium mb-2">
               Product Images *
             </label>
-            <div className="flex flex-col space-y-4">
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-sm text-gray-400">Add images via URL or upload from your device</div>
+            
+            {/* Image Upload Options */}
+            <div className="mb-4">
+              <div className="flex items-center space-x-4">
                 <button
                   type="button"
-                  onClick={() => setIsUploadMode(!isUploadMode)}
-                  className="text-xs text-blue-400 hover:text-blue-300 ml-2"
+                  className={`px-4 py-2 rounded-md ${isUploadMode ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                  onClick={() => setIsUploadMode(true)}
                 >
-                  {isUploadMode ? 'Use URL instead' : 'Upload from device'}
+                  Upload Image
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-2 rounded-md ${!isUploadMode ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                  onClick={() => setIsUploadMode(false)}
+                >
+                  Image URL
                 </button>
               </div>
-              
-              {isUploadMode ? (
-                <ImageUploader
-                  initialImageUrl=""
-                  onImageChange={handleImageUploaded}
+            </div>
+            
+            {isUploadMode ? (
+              <div className="mb-4">
+                <ImageUploader 
+                  initialImageUrl="" 
+                  onImageChange={handleImageUploaded} 
                 />
-              ) : (
+              </div>
+            ) : (
+              <div className="mb-4">
                 <div className="flex">
                   <input
                     type="text"
                     value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Enter image URL"
-                    className={`flex-grow px-4 py-2 bg-gray-700 border ${
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      if (errors.imageUrl) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.imageUrl;
+                          return newErrors;
+                        });
+                      }
+                    }}
+                    placeholder="Enter image URL (http://...)"
+                    className={`flex-1 px-4 py-2 bg-gray-700 border ${
                       errors.imageUrl ? "border-red-500" : "border-gray-600"
                     } rounded-l-md text-white`}
                   />
                   <button
                     type="button"
                     onClick={handleAddImage}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r-md text-white transition-colors"
                   >
                     Add
                   </button>
                 </div>
-              )}
-              
-              {errors.imageUrl && (
-                <p className="mt-1 text-sm text-red-500">{errors.imageUrl}</p>
-              )}
-              
-              {images.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={image}
-                        alt={`Product image ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                {errors.imageUrl && (
+                  <p className="mt-1 text-sm text-red-500">{errors.imageUrl}</p>
+                )}
+              </div>
+            )}
+            
+            {errors.images && (
+              <p className="mt-1 text-sm text-red-500 mb-2">{errors.images}</p>
+            )}
+            
+            {/* Images Preview */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
+              {images.map((imageSrc, index) => (
+                <div key={index} className="relative group bg-gray-800 rounded-md overflow-hidden aspect-square">
+                  <img
+                    src={imageSrc}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to product specific image when there's an error
+                      const fallbackImageNumber = !isNaN(parseInt(productId || "1")) ? parseInt(productId || "1") : 1;
+                      (e.target as HTMLImageElement).src = `/images/products/product-${(fallbackImageNumber <= 10 && fallbackImageNumber > 0) ? fallbackImageNumber : 1}.jpg`;
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="bg-red-600 hover:bg-red-700 p-2 rounded-full text-white transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="bg-gray-700 border border-gray-600 rounded-md p-8 text-center">
-                  <p className="text-gray-400">No images added yet</p>
-                </div>
-              )}
-              {errors.images && (
-                <p className="mt-1 text-sm text-red-500">{errors.images}</p>
-              )}
+              ))}
             </div>
           </div>
           

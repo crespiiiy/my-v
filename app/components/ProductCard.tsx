@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Product } from "../models/product";
 import { useCart } from "../contexts/CartContext";
@@ -15,33 +15,43 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
     : 0;
 
+  // Track image loading state
+  const [imageError, setImageError] = useState(false);
+
   // Get the first image or a fallback
   const imageUrl = product.images && product.images.length > 0
     ? product.images[0]
     : "/images/products/product-1.jpg";
 
+  // Extract product ID to use product-specific fallback
+  const productId = parseInt(product.id);
+  const fallbackImageNumber = !isNaN(productId) && productId <= 10 && productId > 0 
+    ? productId 
+    : 1;
+  const fallbackImage = `/images/products/product-${fallbackImageNumber}.jpg`;
+  
   // Check if the image is a base64 string or a regular URL
   const isBase64Image = imageUrl.startsWith('data:image');
   
-  // Handle different image URL formats
-  const displayImageUrl = isBase64Image
-    ? imageUrl  // Base64 image
-    : (imageUrl.startsWith('http') || imageUrl.startsWith('https'))
-      ? imageUrl  // Absolute URL
-      : imageUrl; // Relative URL (already handled correctly)
+  // Determine the final image URL to display
+  const finalImageUrl = imageError 
+    ? fallbackImage
+    : isBase64Image
+      ? imageUrl // Base64 image
+      : imageUrl.startsWith('http') || imageUrl.startsWith('https')
+        ? imageUrl // Absolute URL
+        : imageUrl; // Relative URL
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-[1.02]">
       <div className="relative">
         <Link to={`/store/${product.id}`}>
           <img
-            src={displayImageUrl}
+            src={finalImageUrl}
             alt={product.name}
             className="w-full h-48 object-cover"
-            onError={(e) => {
-              // Fallback to a default image if the image fails to load
-              (e.target as HTMLImageElement).src = "/images/products/product-1.jpg";
-            }}
+            onError={() => setImageError(true)}
+            loading="lazy"
           />
         </Link>
         {hasDiscount && (

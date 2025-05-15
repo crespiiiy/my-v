@@ -130,30 +130,11 @@ export default function ProductDetail() {
         {/* Product Images */}
         <div>
           <div className="bg-gray-800 rounded-lg overflow-hidden mb-4 relative">
-            {/* Get the current image or fallback */}
-            {(() => {
-              const imageUrl = product.images[activeImageIndex] || "/images/products/product-1.jpg";
-              // Check if the image is a base64 string or a URL
-              const isBase64Image = imageUrl.startsWith('data:image');
-              // Handle different image URL formats
-              const displayImageUrl = isBase64Image
-                ? imageUrl  // Base64 image
-                : (imageUrl.startsWith('http') || imageUrl.startsWith('https'))
-                  ? imageUrl  // Absolute URL
-                  : imageUrl; // Relative URL
-                
-              return (
-                <img
-                  src={displayImageUrl}
-                  alt={product.name}
-                  className="w-full h-auto object-cover aspect-[4/3]"
-                  onError={(e) => {
-                    // Fallback to a default image if the image fails to load
-                    (e.target as HTMLImageElement).src = "/images/products/product-1.jpg";
-                  }}
-                />
-              );
-            })()}
+            {/* Get the current image and handle loading state */}
+            <MainProductImage 
+              imageUrl={product.images[activeImageIndex] || "/images/products/product-1.jpg"} 
+              altText={product.name} 
+            />
             <div className="absolute top-3 right-3">
               <WishlistButton product={product} />
             </div>
@@ -162,36 +143,15 @@ export default function ProductDetail() {
           {/* Thumbnail Images */}
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => {
-                // Check if the image is a base64 string or a URL
-                const isBase64Image = image.startsWith('data:image');
-                // Handle different image URL formats
-                const displayImageUrl = isBase64Image
-                  ? image  // Base64 image
-                  : (image.startsWith('http') || image.startsWith('https'))
-                    ? image  // Absolute URL
-                    : image; // Relative URL
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setActiveImageIndex(index)}
-                    className={`bg-gray-800 rounded overflow-hidden border-2 ${
-                      activeImageIndex === index ? "border-blue-500" : "border-transparent"
-                    }`}
-                  >
-                    <img
-                      src={displayImageUrl}
-                      alt={`${product.name} thumbnail ${index + 1}`}
-                      className="w-full h-auto object-cover aspect-square"
-                      onError={(e) => {
-                        // Fallback to a default image if the image fails to load
-                        (e.target as HTMLImageElement).src = "/images/products/product-1.jpg";
-                      }}
-                    />
-                  </button>
-                );
-              })}
+              {product.images.map((image, index) => (
+                <ProductThumbnail
+                  key={index}
+                  imageUrl={image}
+                  altText={`${product.name} thumbnail ${index + 1}`}
+                  isActive={activeImageIndex === index}
+                  onClick={() => setActiveImageIndex(index)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -350,5 +310,97 @@ export default function ProductDetail() {
         </div>
       )}
     </div>
+  );
+}
+
+// Helper components to manage image state
+function MainProductImage({ imageUrl, altText }: { imageUrl: string, altText: string }) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Generate fallback image path based on pattern, default to product-1.jpg
+  const getDefaultProductImage = () => {
+    // Try to extract product ID from URL
+    const urlParts = window.location.pathname.split('/');
+    const productId = parseInt(urlParts[urlParts.length - 1]);
+    const fallbackImageNumber = !isNaN(productId) && productId <= 10 && productId > 0 
+      ? productId 
+      : 1;
+    return `/images/products/product-${fallbackImageNumber}.jpg`;
+  };
+  
+  // Check if the image is a base64 string or a URL
+  const isBase64Image = imageUrl.startsWith('data:image');
+  
+  // Determine the final image URL to display
+  const finalImageUrl = imageError
+    ? getDefaultProductImage()
+    : isBase64Image
+      ? imageUrl // Base64 image
+      : imageUrl.startsWith('http') || imageUrl.startsWith('https')
+        ? imageUrl // Absolute URL
+        : imageUrl; // Relative URL
+  
+  return (
+    <img
+      src={finalImageUrl}
+      alt={altText}
+      className="w-full h-auto object-cover aspect-[4/3]"
+      onError={() => setImageError(true)}
+      loading="lazy"
+    />
+  );
+}
+
+function ProductThumbnail({ 
+  imageUrl, 
+  altText, 
+  isActive, 
+  onClick 
+}: { 
+  imageUrl: string, 
+  altText: string, 
+  isActive: boolean, 
+  onClick: () => void 
+}) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Generate fallback image path based on pattern, default to product-1.jpg
+  const getDefaultProductImage = () => {
+    // Try to extract product ID from URL
+    const urlParts = window.location.pathname.split('/');
+    const productId = parseInt(urlParts[urlParts.length - 1]);
+    const fallbackImageNumber = !isNaN(productId) && productId <= 10 && productId > 0 
+      ? productId 
+      : 1;
+    return `/images/products/product-${fallbackImageNumber}.jpg`;
+  };
+  
+  // Check if the image is a base64 string or a URL
+  const isBase64Image = imageUrl.startsWith('data:image');
+  
+  // Determine the final image URL to display
+  const finalImageUrl = imageError
+    ? getDefaultProductImage()
+    : isBase64Image
+      ? imageUrl // Base64 image
+      : imageUrl.startsWith('http') || imageUrl.startsWith('https')
+        ? imageUrl // Absolute URL
+        : imageUrl; // Relative URL
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`bg-gray-800 rounded overflow-hidden border-2 ${
+        isActive ? "border-blue-500" : "border-transparent"
+      }`}
+    >
+      <img
+        src={finalImageUrl}
+        alt={altText}
+        className="w-full h-auto object-cover aspect-square"
+        onError={() => setImageError(true)}
+        loading="lazy"
+      />
+    </button>
   );
 } 
