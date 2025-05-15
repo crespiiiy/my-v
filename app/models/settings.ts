@@ -233,4 +233,10 @@ export function getHomepageSettings(): Record<string, string> {
     acc[setting.key] = setting.value;
     return acc;
   }, {} as Record<string, string>);
+}
+
+export function updateHomepageSettings(settings: Record<string, string>): void {
+  Object.entries(settings).forEach(([key, value]) => {
+    updateSetting(key, value);
+  });
 } 

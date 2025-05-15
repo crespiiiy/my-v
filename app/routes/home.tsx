@@ -20,7 +20,7 @@ export default function Home() {
   const heroSubtitle = homepageSettings.hero_subtitle || 
     "Discover our collection of high-quality products designed to enhance your creative workflow.";
   const heroImageUrl = homepageSettings.hero_image_url || 
-    "../images/Developer.webp";
+    "https://raw.githubusercontent.com/crespiiiy/my-v/main/public/images/Developer.webp";
 
   return (
     <div className="space-y-16">
