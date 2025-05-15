@@ -130,11 +130,30 @@ export default function ProductDetail() {
         {/* Product Images */}
         <div>
           <div className="bg-gray-800 rounded-lg overflow-hidden mb-4 relative">
-            <img
-              src={product.images[activeImageIndex] || "https://placehold.co/800x600/111827/ffffff?text=No+Image"}
-              alt={product.name}
-              className="w-full h-auto object-cover aspect-[4/3]"
-            />
+            {/* Get the current image or fallback */}
+            {(() => {
+              const imageUrl = product.images[activeImageIndex] || "/images/products/product-1.jpg";
+              // Check if the image is a base64 string or a URL
+              const isBase64Image = imageUrl.startsWith('data:image');
+              // Handle different image URL formats
+              const displayImageUrl = isBase64Image
+                ? imageUrl  // Base64 image
+                : (imageUrl.startsWith('http') || imageUrl.startsWith('https'))
+                  ? imageUrl  // Absolute URL
+                  : imageUrl; // Relative URL
+                
+              return (
+                <img
+                  src={displayImageUrl}
+                  alt={product.name}
+                  className="w-full h-auto object-cover aspect-[4/3]"
+                  onError={(e) => {
+                    // Fallback to a default image if the image fails to load
+                    (e.target as HTMLImageElement).src = "/images/products/product-1.jpg";
+                  }}
+                />
+              );
+            })()}
             <div className="absolute top-3 right-3">
               <WishlistButton product={product} />
             </div>
@@ -143,21 +162,36 @@ export default function ProductDetail() {
           {/* Thumbnail Images */}
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveImageIndex(index)}
-                  className={`bg-gray-800 rounded overflow-hidden border-2 ${
-                    activeImageIndex === index ? "border-blue-500" : "border-transparent"
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} thumbnail ${index + 1}`}
-                    className="w-full h-auto object-cover aspect-square"
-                  />
-                </button>
-              ))}
+              {product.images.map((image, index) => {
+                // Check if the image is a base64 string or a URL
+                const isBase64Image = image.startsWith('data:image');
+                // Handle different image URL formats
+                const displayImageUrl = isBase64Image
+                  ? image  // Base64 image
+                  : (image.startsWith('http') || image.startsWith('https'))
+                    ? image  // Absolute URL
+                    : image; // Relative URL
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`bg-gray-800 rounded overflow-hidden border-2 ${
+                      activeImageIndex === index ? "border-blue-500" : "border-transparent"
+                    }`}
+                  >
+                    <img
+                      src={displayImageUrl}
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      className="w-full h-auto object-cover aspect-square"
+                      onError={(e) => {
+                        // Fallback to a default image if the image fails to load
+                        (e.target as HTMLImageElement).src = "/images/products/product-1.jpg";
+                      }}
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
