@@ -84,15 +84,6 @@ export default function Store() {
             <p className="text-gray-200 mb-4">
               Enhance your skills with {coursesCount} high-quality courses from top global instructors. Lifetime access to comprehensive tutorials and resources.
             </p>
-            <Link
-              to="/store/courses"
-              className="inline-flex items-center bg-white text-blue-700 hover:bg-gray-100 px-4 py-2 rounded-md transition-colors font-medium"
-            >
-              Browse Courses
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </Link>
           </div>
           <div className="md:w-1/3 flex justify-center">
             <div className="w-32 h-32 md:w-40 md:h-40 bg-blue-600 rounded-full flex items-center justify-center">
