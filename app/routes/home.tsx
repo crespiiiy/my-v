@@ -20,7 +20,7 @@ export default function Home() {
   const heroSubtitle = homepageSettings.hero_subtitle || 
     "Discover our collection of high-quality products designed to enhance your creative workflow.";
   const heroImageUrl = homepageSettings.hero_image_url || 
-    "https://placehold.co/800x600/111827/ffffff?text=Creative+Tools";
+    "/images/Developer.webp";
 
   return (
     <div className="space-y-16">
