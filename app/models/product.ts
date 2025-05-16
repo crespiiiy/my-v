@@ -170,7 +170,7 @@ export let products: Product[] = [
     description: "Step into the dark world of Android hacking. In this course, you'll learn how malware is built, how hackers think, and how to reverse-engineer malicious apps like a pro. Master analysis tools, dynamic environments, and real-world evasion techniques used by advanced Android threats. If you're serious about cybersecurity — this is where your journey begins.",
     price: 89.99,
     originalPrice: 169.99,
-    images: ["/images/courses/Android Malware.jpg"],
+    images: ["/images/courses/Android-Malware.jpg"],
     category: "Courses",
     featured: true,
     inStock: true,
