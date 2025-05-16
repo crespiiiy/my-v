@@ -1,4 +1,5 @@
 import { saveProduct, getAllProducts, isProductCollectionInitialized, saveAllProducts } from '../services/productService';
+import { forceResyncProductsToFirebase } from '../services/productSync';
 
 export interface Product {
   id: string;
@@ -870,21 +871,29 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
     // Update the product in the array
     products[index] = updatedProduct;
     
-    // Save to localStorage for local persistence
+    // Save to localStorage for local persistence with updated version
     try {
       localStorage.setItem('creative_products', JSON.stringify(products));
-      // Also update the version in localStorage
-      localStorage.setItem('creative_products_version', "1.0.1");
+      // Increment version number to trigger refresh on other tabs/sessions
+      const currentVersion = localStorage.getItem('creative_products_version') || "1.0.0";
+      const versionParts = currentVersion.split('.');
+      const newMinorVersion = parseInt(versionParts[2] || "0") + 1;
+      const newVersion = `${versionParts[0]}.${versionParts[1]}.${newMinorVersion}`;
+      localStorage.setItem('creative_products_version', newVersion);
     } catch (error) {
       console.error('Error saving products to localStorage:', error);
     }
     
-    // Save to Firebase for online persistence 
-    // We're using the async function but not waiting for it to complete
+    // Save to Firebase for online persistence and wait for completion
+    // This ensures changes are persisted to the database
     saveProduct(updatedProduct)
       .then(success => {
         if (success) {
           console.log('Product successfully saved to Firebase');
+          // Force resync to make sure all other users will see the changes
+          forceResyncProductsToFirebase()
+            .then(() => console.log('Full product list resynced to Firebase'))
+            .catch(error => console.error('Error resyncing products:', error));
         } else {
           console.error('Failed to save product to Firebase');
         }
@@ -955,20 +964,8 @@ export async function initializeFirebaseProducts() {
       const firebaseProducts = await getAllProducts();
       
       if (firebaseProducts && firebaseProducts.length > 0) {
-        // Get the current default products (as a source of truth)
-        const defaultLaptops = products.filter(p => p.category === "Laptops");
-        const defaultCourses = products.filter(p => p.category === "Courses");
-        
-        // Create a map of firebase products excluding laptops and courses
-        const nonLaptopCourseProducts = firebaseProducts.filter(
-          p => p.category !== "Laptops" && p.category !== "Courses"
-        );
-        
-        // Combine everything back together
-        products = [...nonLaptopCourseProducts, ...defaultLaptops, ...defaultCourses];
-        
-        // Save updates back to Firebase to ensure everything is updated there too
-        await saveAllProducts(products);
+        // Replace all products with Firebase data - don't filter categories
+        products = [...firebaseProducts];
         
         // Also update localStorage
         localStorage.setItem('creative_products', JSON.stringify(products));

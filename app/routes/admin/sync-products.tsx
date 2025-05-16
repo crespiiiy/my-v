@@ -1,24 +1,51 @@
-import React, { useState } from 'react';
-import { products, initializeFirebaseProducts, resetCoursesToDefault } from '../../models/product';
+import React, { useState, useEffect } from 'react';
+import { products, initializeFirebaseProducts } from '../../models/product';
 import { saveAllProducts } from '../../services/productService';
+import { forceResyncProductsToFirebase } from '../../services/productSync';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
 export default function SyncProductsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  // On component mount, check when was the last time products were synced
+  useEffect(() => {
+    const lastSync = localStorage.getItem('last_products_sync_time');
+    if (lastSync) {
+      setLastSyncTime(lastSync);
+    }
+  }, []);
+
+  // Save sync time to localStorage
+  const updateSyncTime = () => {
+    const now = new Date().toLocaleString();
+    localStorage.setItem('last_products_sync_time', now);
+    setLastSyncTime(now);
+  };
 
   const handleSyncToFirebase = async () => {
     setIsLoading(true);
     setMessage(null);
     
     try {
-      const success = await saveAllProducts(products);
+      // First ensure we have the latest products from Firebase
+      await initializeFirebaseProducts();
+      
+      // Then push all current products back to Firebase
+      const success = await forceResyncProductsToFirebase();
       
       if (success) {
+        updateSyncTime();
         setMessage({
-          text: "تم مزامنة المنتجات مع Firebase بنجاح!",
+          text: "تم مزامنة المنتجات مع Firebase بنجاح! سيتم إعادة تحميل الصفحة لتطبيق التغييرات.",
           type: "success"
         });
+        
+        // Force a page reload after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         setMessage({
           text: "فشلت مزامنة المنتجات مع Firebase!",
@@ -44,10 +71,16 @@ export default function SyncProductsPage() {
       const success = await initializeFirebaseProducts();
       
       if (success) {
+        updateSyncTime();
         setMessage({
-          text: "تم تحديث المنتجات المحلية من Firebase بنجاح!",
+          text: "تم تحديث المنتجات المحلية من Firebase بنجاح! سيتم إعادة تحميل الصفحة لتطبيق التغييرات.",
           type: "success"
         });
+        
+        // Force a page reload after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         setMessage({
           text: "فشل تحديث المنتجات المحلية من Firebase!",
@@ -73,14 +106,17 @@ export default function SyncProductsPage() {
       // Clear all product data from localStorage to allow defaults to load
       localStorage.removeItem('creative_products');
       localStorage.removeItem('creative_products_version');
-      
-      // Force page reload to get fresh data from code
-      window.location.reload();
+      localStorage.removeItem('last_products_sync_time');
       
       setMessage({
-        text: "تم إعادة تعيين البيانات المحلية بنجاح!",
+        text: "تم إعادة تعيين البيانات المحلية بنجاح! سيتم إعادة تحميل الصفحة للحصول على البيانات الافتراضية.",
         type: "success"
       });
+      
+      // Force page reload after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       console.error("Error resetting data:", error);
       setMessage({
@@ -91,170 +127,102 @@ export default function SyncProductsPage() {
     }
   };
 
-  const handleResetCourses = async () => {
-    setIsLoading(true);
-    setMessage(null);
-    
-    try {
-      const success = await resetCoursesToDefault();
-      
-      if (success) {
-        setMessage({
-          text: "تم إعادة تعيين الكورسات إلى الحالة الافتراضية بنجاح!",
-          type: "success"
-        });
-        
-        // Reload page after a short delay to refresh data
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        setMessage({
-          text: "فشلت عملية إعادة تعيين الكورسات!",
-          type: "error"
-        });
-      }
-    } catch (error) {
-      console.error("Error resetting courses:", error);
-      setMessage({
-        text: `حدث خطأ أثناء إعادة تعيين الكورسات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`,
-        type: "error"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">إدارة مزامنة المنتجات</h1>
-      
-      {message && (
-        <div 
-          className={`p-4 mb-6 rounded-lg ${
-            message.type === 'success' ? 'bg-green-800 text-green-100' : 'bg-red-800 text-red-100'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-      
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">خيارات المزامنة</h2>
+        <h1 className="text-2xl font-bold mb-2">مزامنة المنتجات</h1>
+        <p className="text-gray-300 mb-6">
+          استخدم هذه الصفحة لإدارة مزامنة المنتجات بين التخزين المحلي وقاعدة بيانات Firebase.
+          {lastSyncTime && (
+            <span className="block mt-2 text-sm text-gray-400">
+              آخر مزامنة: {lastSyncTime}
+            </span>
+          )}
+        </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-gray-700 p-6 rounded-lg">
-            <h3 className="text-lg font-medium mb-2">مزامنة إلى Firebase</h3>
-            <p className="text-gray-300 mb-4">
-              تحديث قاعدة بيانات Firebase بالمنتجات المحلية الحالية.
-              استخدم هذا الخيار بعد إجراء تغييرات محلية ترغب في نشرها لجميع المستخدمين.
-            </p>
-            <button
-              onClick={handleSyncToFirebase}
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-            >
-              {isLoading ? <LoadingIndicator size="sm" /> : "مزامنة المنتجات إلى Firebase"}
-            </button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <button
+            onClick={handleSyncToFirebase}
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            مزامنة المنتجات مع Firebase
+          </button>
           
-          <div className="bg-gray-700 p-6 rounded-lg">
-            <h3 className="text-lg font-medium mb-2">مزامنة من Firebase</h3>
-            <p className="text-gray-300 mb-4">
-              تحديث المنتجات المحلية بالبيانات من Firebase.
-              استخدم هذا الخيار إذا قام مسؤول آخر بإجراء تغييرات وتريد الحصول على أحدث البيانات.
-            </p>
-            <button
-              onClick={handleSyncFromFirebase}
-              disabled={isLoading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-            >
-              {isLoading ? <LoadingIndicator size="sm" /> : "تحديث المنتجات من Firebase"}
-            </button>
-          </div>
+          <button
+            onClick={handleSyncFromFirebase}
+            disabled={isLoading}
+            className="bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            تحديث من Firebase
+          </button>
+          
+          <button
+            onClick={handleResetLocalStorage}
+            disabled={isLoading}
+            className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            إعادة تعيين البيانات المحلية
+          </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-700 p-6 rounded-lg">
-            <h3 className="text-lg font-medium mb-2">إعادة تعيين البيانات المحلية</h3>
-            <p className="text-gray-300 mb-4">
-              إعادة تعيين البيانات المحلية إلى الحالة الافتراضية المحددة في الكود.
-              استخدم هذا الخيار إذا كنت تريد التأكد من تحميل أحدث تغييرات الكود.
-            </p>
-            <button
-              onClick={handleResetLocalStorage}
-              disabled={isLoading}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-            >
-              {isLoading ? <LoadingIndicator size="sm" /> : "إعادة تعيين البيانات المحلية"}
-            </button>
+        {message && (
+          <div
+            className={`p-4 rounded-md mb-6 ${
+              message.type === "success" ? "bg-green-800 text-green-100" : "bg-red-800 text-red-100"
+            }`}
+          >
+            {message.text}
           </div>
-          
-          <div className="bg-yellow-900 p-6 rounded-lg">
-            <h3 className="text-lg font-medium mb-2">إعادة تعيين الكورسات فقط</h3>
-            <p className="text-gray-300 mb-4">
-              إعادة تعيين الكورسات (المنتجات 13-20) إلى البيانات المحددة في الكود مع الاحتفاظ بالمنتجات الأخرى.
-              استخدم هذا لتطبيق تحديثات الكورسات الجديدة.
-            </p>
-            <button
-              onClick={handleResetCourses}
-              disabled={isLoading}
-              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-            >
-              {isLoading ? <LoadingIndicator size="sm" /> : "إعادة تعيين الكورسات فقط"}
-            </button>
+        )}
+        
+        {isLoading && (
+          <div className="text-center py-8">
+            <LoadingIndicator message="جاري المزامنة..." />
           </div>
+        )}
+        
+        <div className="mt-8 p-4 bg-gray-700 rounded-md">
+          <h2 className="text-xl font-semibold mb-4">معلومات حول المزامنة</h2>
+          <ul className="list-disc list-inside space-y-2 text-gray-300">
+            <li>
+              <strong>مزامنة مع Firebase:</strong> يقوم بحفظ جميع المنتجات الحالية إلى Firebase، مما يجعلها متاحة لجميع المستخدمين.
+            </li>
+            <li>
+              <strong>تحديث من Firebase:</strong> يقوم بتحميل أحدث بيانات المنتجات من Firebase، مما يضمن أن لديك أحدث تغييرات من المشرفين الآخرين.
+            </li>
+            <li>
+              <strong>إعادة تعيين البيانات المحلية:</strong> يمسح المنتجات المخزنة محليًا ويعيد تحميل البيانات من Firebase، مفيد في حالة مواجهة مشاكل.
+            </li>
+          </ul>
         </div>
       </div>
       
       <div className="bg-gray-800 rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">المنتجات الحالية ({products.length})</h2>
-        
+        <h2 className="text-xl font-bold mb-4">معلومات المنتجات</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-700">
+          <table className="min-w-full bg-gray-700 rounded-md">
             <thead>
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  المعرف
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  الاسم
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  الفئة
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  السعر
-                </th>
+              <tr className="border-b border-gray-600">
+                <th className="px-4 py-2 text-left">الإحصائية</th>
+                <th className="px-4 py-2 text-left">القيمة</th>
               </tr>
             </thead>
-            <tbody className="bg-gray-900 divide-y divide-gray-800">
-              {products.map((product) => (
-                <tr 
-                  key={product.id} 
-                  className={`${product.category === "Courses" ? "bg-gray-850" : ""} ${
-                    product.id >= "13" && product.id <= "20" ? "border-l-4 border-yellow-600" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {product.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {product.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {product.category}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    ${product.price.toFixed(2)}
-                    {product.originalPrice && (
-                      <span className="ml-2 text-gray-400 line-through">
-                        ${product.originalPrice.toFixed(2)}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+            <tbody>
+              <tr className="border-b border-gray-600">
+                <td className="px-4 py-2">إجمالي عدد المنتجات</td>
+                <td className="px-4 py-2">{products.length}</td>
+              </tr>
+              <tr className="border-b border-gray-600">
+                <td className="px-4 py-2">عدد المنتجات المميزة</td>
+                <td className="px-4 py-2">{products.filter(p => p.featured).length}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2">الفئات</td>
+                <td className="px-4 py-2">
+                  {Array.from(new Set(products.map(p => p.category))).join(', ')}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

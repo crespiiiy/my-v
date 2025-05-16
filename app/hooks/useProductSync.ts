@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { products, initializeFirebaseProducts, resetCoursesToDefault } from '../models/product';
+import { products, initializeFirebaseProducts } from '../models/product';
+import { forceResyncProductsToFirebase } from '../services/productSync';
 
 /**
  * Hook to handle product synchronization between Firebase, localStorage and memory
@@ -12,31 +13,39 @@ export function useProductSync() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Only run initialization once
-        if (!isInitialized) {
+        // Check for version mismatch to force refresh
+        if (typeof window !== 'undefined') {
+          // Store the current version for comparison
+          const currentVersion = localStorage.getItem('creative_products_version');
+          
           console.log('Initializing Firebase products');
           
-          // First ensure course data is correct by applying default courses
-          await resetCoursesToDefault();
-          
-          // Then initialize from Firebase to get latest remote changes
+          // Always load the latest data from Firebase on every app load
+          // This ensures all users see the most recent data
           await initializeFirebaseProducts();
           
-          setIsInitialized(true);
+          // If a new version was loaded, refresh the page to show updates
+          const newVersion = localStorage.getItem('creative_products_version');
+          if (currentVersion && newVersion && currentVersion !== newVersion) {
+            console.log(`Data version changed from ${currentVersion} to ${newVersion}, refreshing...`);
+            window.location.reload();
+          }
         }
+        
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing products:', error);
       }
     };
 
     fetchProducts();
-  }, [isInitialized]);
+  }, []);
 
   // Listen for localStorage changes (for cross-tab sync)
   useEffect(() => {
     // Initialize a listener for storage events to sync across tabs/windows
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'creative_products' && event.newValue) {
+      if ((event.key === 'creative_products' || event.key === 'creative_products_version') && event.newValue) {
         try {
           // When localStorage changes in another tab, update this tab too
           window.location.reload(); // Simple reload to get fresh data
