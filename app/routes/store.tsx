@@ -24,12 +24,15 @@ export default function Store() {
   const coursesCount = products.filter(product => product.category === "Courses").length;
   
   // Filter products based on selected filters
-  let filteredProducts = products.filter((product) => {
-    // Filter by category
-    if (selectedCategory && product.category !== selectedCategory) {
-      return false;
-    }
-    
+  let filteredProducts = products;
+  
+  // Apply category filter first using the improved function
+  if (selectedCategory) {
+    filteredProducts = getProductsByCategory(selectedCategory);
+  }
+  
+  // Then apply additional filters
+  filteredProducts = filteredProducts.filter((product) => {
     // Filter by price range
     if (product.price < priceRange[0] || product.price > priceRange[1]) {
       return false;
@@ -51,26 +54,6 @@ export default function Store() {
     
     return true;
   });
-  
-  // إذا كانت الفئة المختارة هي Laptops استخدم الدالة الخاصة
-  if (selectedCategory === "Laptops") {
-    filteredProducts = getProductsByCategory("Laptops").filter((product) => {
-      if (product.price < priceRange[0] || product.price > priceRange[1]) {
-        return false;
-      }
-      if (
-        searchQuery &&
-        !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      if (showDiscounted && product.originalPrice === undefined) {
-        return false;
-      }
-      return true;
-    });
-  }
   
   // Sort products based on selected option
   const sortedProducts = [...filteredProducts].sort((a, b) => {

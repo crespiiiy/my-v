@@ -675,6 +675,39 @@ export function getProductsByCategory(category: string): Product[] {
   console.log(`Found ${categoryProducts.length} products in category ${category}`);
   console.log('Category products IDs:', categoryProducts.map(p => p.id).join(', '));
   
+  // Ensure all products for each category are included regardless of what's in Firebase
+  // Define the IDs that should be present in each category
+  const categoryDefaultIds: Record<string, string[]> = {
+    "Laptops": ["27", "28", "29", "30", "31", "32", "33", "34"],
+    "AI Models": ["35", "36", "37", "38", "39"],
+    "Smartphones": ["5", "6", "7", "8", "9", "10", "11", "12"],
+    "VPS Servers": ["21", "22", "23", "24"],
+    "Misc": ["40", "41", "42", "43", "44"],
+    "RAT Tools": ["1", "2", "3", "4"],
+    "Courses": ["101", "102", "103", "104", "105", "106", "107", "108", "109", "110"]
+  };
+  
+  // If the category has default IDs defined
+  if (categoryDefaultIds[category]) {
+    // Get the IDs that should be in this category
+    const defaultIds = categoryDefaultIds[category];
+    
+    // Find any missing products
+    const existingIds = new Set(categoryProducts.map(p => p.id));
+    const missingIds = defaultIds.filter(id => !existingIds.has(id));
+    
+    console.log(`Missing ${category} IDs:`, missingIds.join(', '));
+    
+    // If any products are missing, find them in the full products array
+    if (missingIds.length > 0) {
+      const missingProducts = products.filter(p => missingIds.includes(p.id));
+      console.log(`Found ${missingProducts.length} missing products from full array`);
+      
+      // Return combined list
+      return [...categoryProducts, ...missingProducts];
+    }
+  }
+  
   // Special handling for Laptops category to ensure it shows all laptop products
   if (category === "Laptops") {
     // Get the initial array of laptops as defined in the code

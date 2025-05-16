@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { products, initializeFirebaseProducts } from '../models/product';
+import { products, initializeFirebaseProducts, getProductsByCategory } from '../models/product';
 import { forceResyncProductsToFirebase } from '../services/productSync';
 
 /**
@@ -30,6 +30,32 @@ export function useProductSync() {
             // Load products from Firebase
             await initializeFirebaseProducts();
             localStorage.setItem('last_firebase_sync_time', currentTime.toString());
+            
+            // Force a sync to ensure all category products are available
+            console.log('Running category sanity check...');
+            
+            // Check if all categories have the expected number of products
+            const categories = ['Laptops', 'AI Models', 'Smartphones', 'VPS Servers', 'Misc', 'RAT Tools', 'Courses'];
+            let missingProducts = false;
+            
+            categories.forEach(category => {
+              const categoryProducts = getProductsByCategory(category);
+              console.log(`Category ${category} has ${categoryProducts.length} products`);
+              
+              // If the function returned more products than the filter, we have missing products
+              const filteredProducts = products.filter(p => p.category === category);
+              if (categoryProducts.length > filteredProducts.length) {
+                missingProducts = true;
+              }
+            });
+            
+            // If we have missing products, force a version change to refresh
+            if (missingProducts) {
+              console.log('Missing products detected, forcing a version change');
+              const newVersion = "1.0.7"; // Force a significant version change
+              localStorage.setItem('creative_products_version', newVersion);
+              window.location.reload();
+            }
             
             // Only refresh if we detect a significant version change
             const newVersion = localStorage.getItem('creative_products_version');
