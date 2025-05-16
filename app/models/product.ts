@@ -620,7 +620,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.4"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.5"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -639,21 +639,17 @@ try {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-          // Make sure we preserve laptop products (IDs 27-34)
-          const updatedProducts = parsedProducts.map(p => {
-            // Preserve laptops as defined in the code
-            if (p.id >= "27" && p.id <= "34") {
-              const defaultLaptop = products.find(dp => dp.id === p.id);
-              return defaultLaptop || p;
-            }
-            // Make sure the courses are up to date
-            if (p.id >= "101" && p.id <= "110") {
-              const defaultCourse = products.find(dp => dp.id === p.id);
-              return defaultCourse || p;
-            }
-            return p;
-          });
-          products = updatedProducts;
+          // Get the current default products (as a source of truth)
+          const defaultLaptops = products.filter(p => p.category === "Laptops");
+          const defaultCourses = products.filter(p => p.category === "Courses");
+          
+          // Create a map of saved products excluding laptops and courses
+          const nonLaptopCourseProducts = parsedProducts.filter(
+            p => p.category !== "Laptops" && p.category !== "Courses"
+          );
+          
+          // Combine everything back together
+          products = [...nonLaptopCourseProducts, ...defaultLaptops, ...defaultCourses];
           
           // Update localStorage with the merged data
           localStorage.setItem('creative_products', JSON.stringify(products));
@@ -675,7 +671,182 @@ export function getFeaturedProducts(): Product[] {
 }
 
 export function getProductsByCategory(category: string): Product[] {
-  return products.filter(product => product.category === category);
+  console.log(`Getting products for category: ${category}`);
+  console.log(`Total products: ${products.length}`);
+  
+  // Get all products with this category
+  const categoryProducts = products.filter(product => product.category === category);
+  
+  console.log(`Found ${categoryProducts.length} products in category ${category}`);
+  console.log('Category products IDs:', categoryProducts.map(p => p.id).join(', '));
+  
+  // Special handling for Laptops category to ensure it shows all laptop products
+  if (category === "Laptops") {
+    // Get the initial array of laptops as defined in the code
+    const originalLaptops = [
+      { id: "27", name: "MacBook Pro M3 Max" },
+      { id: "28", name: "MacBook Pro M3 Pro" },
+      { id: "29", name: "MacBook Air M3" },
+      { id: "30", name: "ThinkPad X1 Extreme" },
+      { id: "31", name: "Dell XPS 17" },
+      { id: "32", name: "MSI Titan GT77" },
+      { id: "33", name: "Razer Blade 17" },
+      { id: "34", name: "ASUS ROG Zephyrus" }
+    ];
+    
+    // Find any missing laptops
+    const existingIds = new Set(categoryProducts.map(p => p.id));
+    const missingLaptopIds = originalLaptops
+      .filter(laptop => !existingIds.has(laptop.id))
+      .map(laptop => laptop.id);
+    
+    console.log('Missing laptop IDs:', missingLaptopIds.join(', '));
+    
+    // If any laptops are missing, fetch them directly from the original products array
+    if (missingLaptopIds.length > 0) {
+      // Use the default products array definition
+      const defaultProductsArray = [
+        // RAT Tools
+        {
+          id: "1",
+          name: "DarkComet RAT",
+          description: "A powerful remote access tool designed for educational and security testing purposes. Features an easy-to-use interface and multiple system control capabilities. Ideal for cybersecurity professionals learning how to protect systems from vulnerabilities.",
+          price: 299.99,
+          images: ["/images/products/rat-1.jpg"],
+          category: "RAT Tools",
+          featured: true,
+          inStock: true,
+          stockQuantity: 50,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        // ... other products
+        
+        // Laptops
+        {
+          id: "27",
+          name: "MacBook Pro M3 Max",
+          description: "Apple's most powerful laptop with M3 Max chip featuring 16-core CPU and 40-core GPU, 16-inch Liquid Retina XDR display, 64GB unified memory, and 2TB SSD storage. Perfect for developers and cybersecurity specialists.",
+          price: 3499.99,
+          originalPrice: 3699.99,
+          images: ["/images/products/macbook-pro-m3-max.jpg"],
+          category: "Laptops",
+          featured: true,
+          inStock: true,
+          stockQuantity: 10,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "28",
+          name: "MacBook Pro M3 Pro",
+          description: "Apple's premium laptop with M3 Pro chip featuring 12-core CPU and 18-core GPU, 14-inch Liquid Retina XDR display, 32GB unified memory, and 1TB SSD storage.",
+          price: 2499.99,
+          images: ["/images/products/macbook-pro-m3-pro.jpg"],
+          category: "Laptops",
+          featured: false,
+          inStock: true,
+          stockQuantity: 15,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "29",
+          name: "MacBook Air M3",
+          description: "Apple's lightest and thinnest laptop with powerful M3 chip, 13.6-inch Liquid Retina display, 16GB unified memory, and 512GB SSD storage. Features a slim design with up to 18 hours of battery life.",
+          price: 1299.99,
+          originalPrice: 1399.99,
+          images: ["/images/products/macbook-air-m3.jpg"],
+          category: "Laptops",
+          featured: false,
+          inStock: true,
+          stockQuantity: 20,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "30",
+          name: "ThinkPad X1 Extreme",
+          description: "Laptop specialized for cybersecurity with 13th Gen Intel Core i9 processor, NVIDIA RTX 4070 graphics, 32GB upgradable RAM, and 1TB SSD. Comes with dual-boot Windows/Linux operating system.",
+          price: 2499.99,
+          originalPrice: 2799.99,
+          images: ["/images/products/thinkpad-x1-extreme.jpg"],
+          category: "Laptops",
+          featured: true,
+          inStock: true,
+          stockQuantity: 12,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "31",
+          name: "Dell XPS 17",
+          description: "Powerful developer laptop with 17-inch 4K display, Intel Core i9 processor, NVIDIA RTX 4080 graphics, 64GB RAM, and 2TB SSD. Perfect for advanced development and penetration testing.",
+          price: 2799.99,
+          images: ["/images/products/dell-xps-17.jpg"],
+          category: "Laptops",
+          featured: false,
+          inStock: true,
+          stockQuantity: 8,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "32",
+          name: "MSI Titan GT77",
+          description: "The most powerful laptop for gaming and cybersecurity tasks with Intel Core i9 HX processor, NVIDIA RTX 4090 graphics, 128GB RAM, and 4TB SSD. Advanced cooling system and 4K display with 144Hz refresh rate.",
+          price: 3999.99,
+          originalPrice: 4299.99,
+          images: ["/images/products/msi-titan-gt77.jpg"],
+          category: "Laptops",
+          featured: true,
+          inStock: true,
+          stockQuantity: 5,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "33",
+          name: "Razer Blade 17",
+          description: "Elegant laptop for developers and penetration testers with Intel Core i7 processor, NVIDIA RTX 4070 graphics, 32GB RAM, and 1TB SSD. Features a sleek metal design and QHD display with 240Hz refresh rate.",
+          price: 2399.99,
+          images: ["/images/products/razer-blade-17.jpg"],
+          category: "Laptops",
+          featured: false,
+          inStock: true,
+          stockQuantity: 10,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "34",
+          name: "ASUS ROG Zephyrus",
+          description: "Lightweight and powerful developer laptop with AMD Ryzen 9 processor, NVIDIA RTX 4060 graphics, 16GB RAM, and 1TB SSD. Perfect for mobile use with high processing power.",
+          price: 1899.99,
+          originalPrice: 1999.99,
+          images: ["/images/products/asus-rog-zephyrus.jpg"],
+          category: "Laptops",
+          featured: false,
+          inStock: true,
+          stockQuantity: 15,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      ];
+      
+      // Find the missing laptops from the default array
+      const missingLaptops = defaultProductsArray.filter(p => 
+        missingLaptopIds.includes(p.id) && p.category === "Laptops"
+      );
+      
+      console.log(`Found ${missingLaptops.length} missing laptops in default array`);
+      
+      // Add the missing laptops to the result
+      return [...categoryProducts, ...missingLaptops];
+    }
+  }
+  
+  return categoryProducts;
 }
 
 export function getDiscountedProducts(): Product[] {
@@ -790,30 +961,24 @@ export async function initializeFirebaseProducts() {
       const firebaseProducts = await getAllProducts();
       
       if (firebaseProducts && firebaseProducts.length > 0) {
-        // Merge with default laptops (items 27-34) and courses (items 101-110)
-        const updatedProducts = firebaseProducts.map(p => {
-          // Preserve laptops as defined in the code
-          if (p.id >= "27" && p.id <= "34") {
-            const defaultLaptop = products.find(dp => dp.id === p.id);
-            return defaultLaptop || p;
-          }
-          // Make sure the courses are up to date
-          if (p.id >= "101" && p.id <= "110") {
-            const defaultCourse = products.find(dp => dp.id === p.id);
-            return defaultCourse || p;
-          }
-          return p;
-        });
+        // Get the current default products (as a source of truth)
+        const defaultLaptops = products.filter(p => p.category === "Laptops");
+        const defaultCourses = products.filter(p => p.category === "Courses");
         
-        // Update the products array with merged data
-        products = updatedProducts;
+        // Create a map of firebase products excluding laptops and courses
+        const nonLaptopCourseProducts = firebaseProducts.filter(
+          p => p.category !== "Laptops" && p.category !== "Courses"
+        );
+        
+        // Combine everything back together
+        products = [...nonLaptopCourseProducts, ...defaultLaptops, ...defaultCourses];
         
         // Save updates back to Firebase to ensure everything is updated there too
         await saveAllProducts(products);
         
         // Also update localStorage
         localStorage.setItem('creative_products', JSON.stringify(products));
-        localStorage.setItem('creative_products_version', "1.0.4");
+        localStorage.setItem('creative_products_version', "1.0.5");
       }
     }
     
