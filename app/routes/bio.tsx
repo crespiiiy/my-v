@@ -73,7 +73,7 @@ export default function Bio() {
           </div>
           <div className="bg-gray-800 rounded-lg overflow-hidden">
             <img
-              src="https://placehold.co/800x600/111827/ffffff?text=Our+Story"
+              src="/images/our-story.jpg"
               alt="Our Story"
               className="w-full h-auto"
             />
