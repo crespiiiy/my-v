@@ -152,11 +152,11 @@ export const products: Product[] = [
   // كورسات برمجة عالمية
   {
     id: "11",
-    name: "Complete Web Development Bootcamp",
-    description: "Comprehensive web development course covering HTML, CSS, JavaScript, React, Node.js, MongoDB, and more. Build over 20 real-world projects and prepare for a career in web development.",
+    name: "The Art of Mac Malware",
+    description: "Unmask the secrets behind macOS exploitation. Think macOS is completely secure? This advanced and captivating course takes you deep into the world of Mac malware—how it's created, concealed, and detected. Whether you're a security researcher, tool developer, or cybersecurity enthusiast, this path is designed to sharpen your skills and reveal unseen aspects of macOS threats.",
     price: 94.99,
     originalPrice: 199.99,
-    images: ["/images/products/product-1.jpg", "/images/products/product-2.jpg"],
+    images: ["/images/courses/mac-malware.jpg", "/images/products/product-2.jpg"],
     category: "Courses",
     featured: true,
     inStock: true,
