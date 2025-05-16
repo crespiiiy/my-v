@@ -620,7 +620,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.3"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.4"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -639,10 +639,15 @@ try {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-          // Make sure the courses (items 101-110) are up to date
+          // Make sure we preserve laptop products (IDs 27-34)
           const updatedProducts = parsedProducts.map(p => {
+            // Preserve laptops as defined in the code
+            if (p.id >= "27" && p.id <= "34") {
+              const defaultLaptop = products.find(dp => dp.id === p.id);
+              return defaultLaptop || p;
+            }
+            // Make sure the courses are up to date
             if (p.id >= "101" && p.id <= "110") {
-              // Find the corresponding course in the default array
               const defaultCourse = products.find(dp => dp.id === p.id);
               return defaultCourse || p;
             }
@@ -785,10 +790,15 @@ export async function initializeFirebaseProducts() {
       const firebaseProducts = await getAllProducts();
       
       if (firebaseProducts && firebaseProducts.length > 0) {
-        // Merge with default courses (items 101-110)
+        // Merge with default laptops (items 27-34) and courses (items 101-110)
         const updatedProducts = firebaseProducts.map(p => {
+          // Preserve laptops as defined in the code
+          if (p.id >= "27" && p.id <= "34") {
+            const defaultLaptop = products.find(dp => dp.id === p.id);
+            return defaultLaptop || p;
+          }
+          // Make sure the courses are up to date
           if (p.id >= "101" && p.id <= "110") {
-            // Find the corresponding course in the default array
             const defaultCourse = products.find(dp => dp.id === p.id);
             return defaultCourse || p;
           }
@@ -798,12 +808,12 @@ export async function initializeFirebaseProducts() {
         // Update the products array with merged data
         products = updatedProducts;
         
-        // Save updates back to Firebase to ensure courses are updated there too
+        // Save updates back to Firebase to ensure everything is updated there too
         await saveAllProducts(products);
         
         // Also update localStorage
         localStorage.setItem('creative_products', JSON.stringify(products));
-        localStorage.setItem('creative_products_version', "1.0.3");
+        localStorage.setItem('creative_products_version', "1.0.4");
       }
     }
     
