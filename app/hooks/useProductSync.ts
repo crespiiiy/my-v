@@ -13,33 +13,44 @@ export function useProductSync() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Check for version mismatch to force refresh
-        if (typeof window !== 'undefined') {
+        // Only run initialization once if not already initialized
+        if (!isInitialized) {
+          console.log('Initializing Firebase products');
+          
           // Store the current version for comparison
           const currentVersion = localStorage.getItem('creative_products_version');
           
-          console.log('Initializing Firebase products');
-          
-          // Always load the latest data from Firebase on every app load
-          // This ensures all users see the most recent data
-          await initializeFirebaseProducts();
-          
-          // If a new version was loaded, refresh the page to show updates
-          const newVersion = localStorage.getItem('creative_products_version');
-          if (currentVersion && newVersion && currentVersion !== newVersion) {
-            console.log(`Data version changed from ${currentVersion} to ${newVersion}, refreshing...`);
-            window.location.reload();
+          // Only attempt Firebase sync if we don't have a version number yet or at most once per hour
+          const lastSyncTime = localStorage.getItem('last_firebase_sync_time');
+          const currentTime = Date.now();
+          const shouldSync = !lastSyncTime || 
+            (currentTime - parseInt(lastSyncTime, 10)) > 3600000; // 1 hour in milliseconds
+            
+          if (shouldSync) {
+            // Load products from Firebase
+            await initializeFirebaseProducts();
+            localStorage.setItem('last_firebase_sync_time', currentTime.toString());
+            
+            // Only refresh if we detect a significant version change
+            const newVersion = localStorage.getItem('creative_products_version');
+            if (currentVersion && newVersion && 
+                currentVersion !== newVersion && 
+                parseInt(newVersion.split('.')[2], 10) - parseInt(currentVersion.split('.')[2], 10) > 5) {
+              console.log(`Significant data version change from ${currentVersion} to ${newVersion}, refreshing...`);
+              window.location.reload();
+            }
           }
+          
+          setIsInitialized(true);
         }
-        
-        setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing products:', error);
+        setIsInitialized(true); // Still mark as initialized to avoid infinite retry
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [isInitialized]);
 
   // Listen for localStorage changes (for cross-tab sync)
   useEffect(() => {
@@ -47,10 +58,17 @@ export function useProductSync() {
     const handleStorageChange = (event: StorageEvent) => {
       if ((event.key === 'creative_products' || event.key === 'creative_products_version') && event.newValue) {
         try {
-          // When localStorage changes in another tab, update this tab too
-          window.location.reload(); // Simple reload to get fresh data
+          // Only reload if the version changed significantly to avoid loop
+          if (event.key === 'creative_products_version' && event.oldValue) {
+            const oldMinor = parseInt(event.oldValue.split('.')[2], 10);
+            const newMinor = parseInt(event.newValue.split('.')[2], 10);
+            if (newMinor - oldMinor > 5) {
+              console.log(`Storage changed with significant version difference: ${event.oldValue} -> ${event.newValue}`);
+              window.location.reload();
+            }
+          }
         } catch (error) {
-          console.error('Error syncing products from storage event:', error);
+          console.error('Error handling storage event:', error);
         }
       }
     };

@@ -38,14 +38,19 @@ export default function SyncProductsPage() {
       if (success) {
         updateSyncTime();
         setMessage({
-          text: "تم مزامنة المنتجات مع Firebase بنجاح! سيتم إعادة تحميل الصفحة لتطبيق التغييرات.",
+          text: "تم مزامنة المنتجات مع Firebase بنجاح!",
           type: "success"
         });
         
-        // Force a page reload after a short delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        // Force a version change to trigger refresh, but only once
+        const currentVersion = localStorage.getItem('creative_products_version') || "1.0.0";
+        const versionParts = currentVersion.split('.');
+        // Create a large jump in version to signal an admin sync
+        const newMinorVersion = parseInt(versionParts[2] || "0") + 10;
+        const newVersion = `${versionParts[0]}.${versionParts[1]}.${newMinorVersion}`;
+        localStorage.setItem('creative_products_version', newVersion);
+        
+        // No automatic reload - let the admin trigger a reload manually if needed
       } else {
         setMessage({
           text: "فشلت مزامنة المنتجات مع Firebase!",
@@ -72,15 +77,18 @@ export default function SyncProductsPage() {
       
       if (success) {
         updateSyncTime();
+        // Force a version change to trigger refresh in other tabs, but only once
+        const currentVersion = localStorage.getItem('creative_products_version') || "1.0.0";
+        const versionParts = currentVersion.split('.');
+        // Create a large jump in version to signal an admin sync
+        const newMinorVersion = parseInt(versionParts[2] || "0") + 10;
+        const newVersion = `${versionParts[0]}.${versionParts[1]}.${newMinorVersion}`;
+        localStorage.setItem('creative_products_version', newVersion);
+        
         setMessage({
-          text: "تم تحديث المنتجات المحلية من Firebase بنجاح! سيتم إعادة تحميل الصفحة لتطبيق التغييرات.",
+          text: "تم تحديث المنتجات المحلية من Firebase بنجاح!",
           type: "success"
         });
-        
-        // Force a page reload after a short delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
       } else {
         setMessage({
           text: "فشل تحديث المنتجات المحلية من Firebase!",
@@ -107,9 +115,10 @@ export default function SyncProductsPage() {
       localStorage.removeItem('creative_products');
       localStorage.removeItem('creative_products_version');
       localStorage.removeItem('last_products_sync_time');
+      localStorage.removeItem('last_firebase_sync_time');
       
       setMessage({
-        text: "تم إعادة تعيين البيانات المحلية بنجاح! سيتم إعادة تحميل الصفحة للحصول على البيانات الافتراضية.",
+        text: "تم إعادة تعيين البيانات المحلية بنجاح!",
         type: "success"
       });
       
@@ -125,6 +134,11 @@ export default function SyncProductsPage() {
       });
       setIsLoading(false);
     }
+  };
+
+  // Add a manual refresh button
+  const handleManualRefresh = () => {
+    window.location.reload();
   };
 
   return (
@@ -163,6 +177,16 @@ export default function SyncProductsPage() {
             className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             إعادة تعيين البيانات المحلية
+          </button>
+        </div>
+        
+        <div className="mb-8">
+          <button
+            onClick={handleManualRefresh}
+            disabled={isLoading}
+            className="bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+          >
+            تحديث الصفحة يدوياً بعد المزامنة
           </button>
         </div>
         

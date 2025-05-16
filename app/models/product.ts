@@ -868,32 +868,46 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
       updatedAt: new Date().toISOString()
     };
     
+    // Check if there was a significant change that requires version update
+    const hasSignificantChange = 
+      updatedData.name !== currentProduct.name || 
+      updatedData.price !== currentProduct.price || 
+      updatedData.description !== currentProduct.description ||
+      updatedData.category !== currentProduct.category ||
+      (updatedData.images && JSON.stringify(updatedData.images) !== JSON.stringify(currentProduct.images));
+    
     // Update the product in the array
     products[index] = updatedProduct;
     
     // Save to localStorage for local persistence with updated version
     try {
       localStorage.setItem('creative_products', JSON.stringify(products));
-      // Increment version number to trigger refresh on other tabs/sessions
-      const currentVersion = localStorage.getItem('creative_products_version') || "1.0.0";
-      const versionParts = currentVersion.split('.');
-      const newMinorVersion = parseInt(versionParts[2] || "0") + 1;
-      const newVersion = `${versionParts[0]}.${versionParts[1]}.${newMinorVersion}`;
-      localStorage.setItem('creative_products_version', newVersion);
+      
+      // Only update version if there was a significant change
+      if (hasSignificantChange) {
+        // Get current version or use default
+        const currentVersion = localStorage.getItem('creative_products_version') || "1.0.0";
+        const versionParts = currentVersion.split('.');
+        const newMinorVersion = parseInt(versionParts[2] || "0") + 1;
+        const newVersion = `${versionParts[0]}.${versionParts[1]}.${newMinorVersion}`;
+        localStorage.setItem('creative_products_version', newVersion);
+        console.log(`Updated version to ${newVersion} due to significant product change`);
+      }
     } catch (error) {
       console.error('Error saving products to localStorage:', error);
     }
     
-    // Save to Firebase for online persistence and wait for completion
-    // This ensures changes are persisted to the database
+    // Save to Firebase for online persistence
     saveProduct(updatedProduct)
       .then(success => {
         if (success) {
           console.log('Product successfully saved to Firebase');
-          // Force resync to make sure all other users will see the changes
-          forceResyncProductsToFirebase()
-            .then(() => console.log('Full product list resynced to Firebase'))
-            .catch(error => console.error('Error resyncing products:', error));
+          // Only force full resync for significant changes
+          if (hasSignificantChange) {
+            forceResyncProductsToFirebase()
+              .then(() => console.log('Full product list resynced to Firebase'))
+              .catch(error => console.error('Error resyncing products:', error));
+          }
         } else {
           console.error('Failed to save product to Firebase');
         }
@@ -967,9 +981,13 @@ export async function initializeFirebaseProducts() {
         // Replace all products with Firebase data - don't filter categories
         products = [...firebaseProducts];
         
-        // Also update localStorage
+        // Only update localStorage with products, don't increment version unless a specific flag is set
         localStorage.setItem('creative_products', JSON.stringify(products));
-        localStorage.setItem('creative_products_version', "1.0.5");
+        
+        // Only set version if not already set to avoid unnecessary updates
+        if (!localStorage.getItem('creative_products_version')) {
+          localStorage.setItem('creative_products_version', "1.0.0");
+        }
       }
     }
     
