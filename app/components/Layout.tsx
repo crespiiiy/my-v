@@ -4,15 +4,27 @@ import Logo from "./Logo";
 import CartIcon from "./CartIcon";
 import { useAuth } from "../contexts/AuthContext";
 import { useProductSync } from "../hooks/useProductSync";
+import LoadingIndicator from "./LoadingIndicator";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isLoggedIn, user, logout, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Use our product sync hook to ensure products are synced with localStorage
+  // Use our product sync hook to ensure products are synced with Firebase
   useProductSync();
+  
+  // Set loading state to false after a short delay
+  useEffect(() => {
+    // Wait for a moment to load products
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const navLinks = [
     { name: "Home", path: "/" },
@@ -35,6 +47,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-950 text-white">
+      {isLoading && <LoadingIndicator message="Loading products..." />}
+      
       {/* Header */}
       <header className="sticky top-0 z-50 bg-gray-900 border-b border-gray-800">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">

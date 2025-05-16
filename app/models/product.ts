@@ -1,3 +1,5 @@
+import { saveProduct, getAllProducts, isProductCollectionInitialized, saveAllProducts } from '../services/productService';
+
 export interface Product {
   id: string;
   name: string;
@@ -347,17 +349,60 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
     // Update the product in the array
     products[index] = updatedProduct;
     
-    // If this is a real app, you'd save to localStorage or sessionStorage for persistence across page refreshes
-    // This will make changes visible immediately
+    // Save to localStorage for local persistence
     try {
-      // Store the updated products array in localStorage for persistence between refreshes
       localStorage.setItem('creative_products', JSON.stringify(products));
     } catch (error) {
       console.error('Error saving products to localStorage:', error);
     }
     
+    // Save to Firebase for online persistence 
+    // We're using the async function but not waiting for it to complete
+    saveProduct(updatedProduct)
+      .then(success => {
+        if (success) {
+          console.log('Product successfully saved to Firebase');
+        } else {
+          console.error('Failed to save product to Firebase');
+        }
+      })
+      .catch(error => {
+        console.error('Error saving product to Firebase:', error);
+      });
+    
     return updatedProduct;
   }
   
   return undefined;
+}
+
+// Initialize Firebase products if needed
+export async function initializeFirebaseProducts() {
+  try {
+    // Check if products already exist in Firebase
+    const isInitialized = await isProductCollectionInitialized();
+    
+    if (!isInitialized) {
+      // If not, save all default products to Firebase
+      console.log('Initializing products in Firebase for the first time');
+      await saveAllProducts(products);
+    } else {
+      // If products exist in Firebase, load them
+      console.log('Loading products from Firebase');
+      const firebaseProducts = await getAllProducts();
+      
+      if (firebaseProducts && firebaseProducts.length > 0) {
+        // Update the products array with data from Firebase
+        products = firebaseProducts;
+        
+        // Also update localStorage
+        localStorage.setItem('creative_products', JSON.stringify(products));
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error initializing Firebase products:', error);
+    return false;
+  }
 } 
