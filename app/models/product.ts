@@ -297,11 +297,23 @@ export let products: Product[] = [
 // Load products from localStorage if available (must run on client side)
 try {
   if (typeof window !== 'undefined') {
-    const savedProducts = localStorage.getItem('creative_products');
-    if (savedProducts) {
-      const parsedProducts = JSON.parse(savedProducts);
-      if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-        products = parsedProducts;
+    // Add a version check to force refresh on update
+    const CURRENT_DATA_VERSION = "1.0.1"; // Increment this when making data changes
+    const savedVersion = localStorage.getItem('creative_products_version');
+    
+    // If version mismatch, clear localStorage to force refresh
+    if (savedVersion !== CURRENT_DATA_VERSION) {
+      console.log('Data version mismatch. Clearing cached products.');
+      localStorage.removeItem('creative_products');
+      localStorage.setItem('creative_products_version', CURRENT_DATA_VERSION);
+    } else {
+      // Only load from localStorage if version matches
+      const savedProducts = localStorage.getItem('creative_products');
+      if (savedProducts) {
+        const parsedProducts = JSON.parse(savedProducts);
+        if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
+          products = parsedProducts;
+        }
       }
     }
   }
@@ -352,6 +364,8 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
     // Save to localStorage for local persistence
     try {
       localStorage.setItem('creative_products', JSON.stringify(products));
+      // Also update the version in localStorage
+      localStorage.setItem('creative_products_version', "1.0.1");
     } catch (error) {
       console.error('Error saving products to localStorage:', error);
     }
@@ -374,6 +388,46 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
   }
   
   return undefined;
+}
+
+// Reset all courses to match the ones defined in code
+export async function resetCoursesToDefault() {
+  // Default courses data for IDs 13-20
+  const defaultCourses = products.filter(p => p.id >= "13" && p.id <= "20");
+  
+  // Update localStorage with default courses
+  try {
+    // Get existing products from localStorage
+    const savedProductsStr = localStorage.getItem('creative_products');
+    if (savedProductsStr) {
+      let savedProducts: Product[] = JSON.parse(savedProductsStr);
+      
+      // Replace courses in saved products
+      savedProducts = savedProducts.map((p: Product) => {
+        if (p.id >= "13" && p.id <= "20") {
+          // Find the default course with the same ID
+          const defaultCourse = defaultCourses.find(d => d.id === p.id);
+          return defaultCourse || p;
+        }
+        return p;
+      });
+      
+      // Save updated products back to localStorage
+      localStorage.setItem('creative_products', JSON.stringify(savedProducts));
+      localStorage.setItem('creative_products_version', "1.0.1");
+      
+      // Update in-memory products
+      products = savedProducts;
+    }
+    
+    // Also save to Firebase
+    await saveAllProducts(products);
+    
+    return true;
+  } catch (error) {
+    console.error('Error resetting courses:', error);
+    return false;
+  }
 }
 
 // Initialize Firebase products if needed
