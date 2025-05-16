@@ -14,7 +14,7 @@ export interface Product {
 }
 
 // Sample products data
-export const products: Product[] = [
+export let products: Product[] = [
   {
     id: "1",
     name: "Professional Camera",
@@ -292,6 +292,21 @@ export const products: Product[] = [
   }
 ];
 
+// Load products from localStorage if available (must run on client side)
+try {
+  if (typeof window !== 'undefined') {
+    const savedProducts = localStorage.getItem('creative_products');
+    if (savedProducts) {
+      const parsedProducts = JSON.parse(savedProducts);
+      if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
+        products = parsedProducts;
+      }
+    }
+  }
+} catch (error) {
+  console.error('Error loading products from localStorage:', error);
+}
+
 // Helper functions for product operations
 export function getProductById(id: string): Product | undefined {
   return products.find(product => product.id === id);
@@ -312,4 +327,37 @@ export function getDiscountedProducts(): Product[] {
 export function getAllCategories(): string[] {
   const categories = new Set(products.map(product => product.category));
   return Array.from(categories);
+}
+
+// New function to update a product
+export function updateProduct(id: string, updatedData: Partial<Product>): Product | undefined {
+  const index = products.findIndex(product => product.id === id);
+  
+  if (index !== -1) {
+    // Get the current product
+    const currentProduct = products[index];
+    
+    // Create updated product with new data
+    const updatedProduct = {
+      ...currentProduct,
+      ...updatedData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Update the product in the array
+    products[index] = updatedProduct;
+    
+    // If this is a real app, you'd save to localStorage or sessionStorage for persistence across page refreshes
+    // This will make changes visible immediately
+    try {
+      // Store the updated products array in localStorage for persistence between refreshes
+      localStorage.setItem('creative_products', JSON.stringify(products));
+    } catch (error) {
+      console.error('Error saving products to localStorage:', error);
+    }
+    
+    return updatedProduct;
+  }
+  
+  return undefined;
 } 

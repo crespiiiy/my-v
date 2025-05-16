@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import type { Route } from "./+types/edit";
-import { getProductById, getAllCategories } from "../../../models/product";
+import { getProductById, getAllCategories, updateProduct } from "../../../models/product";
 import ImageUploader from "../../../components/ImageUploader";
 
 export function meta({ params }: Route.MetaArgs) {
@@ -154,19 +154,52 @@ export default function EditProduct() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm() || !productId) {
       return;
     }
     
     setIsSubmitting(true);
     
-    // In a real application, you would send this data to your backend API
-    // For this example, we'll simulate a successful update
-    setTimeout(() => {
+    // Prepare the product data
+    const productData = {
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
+      category: formData.category,
+      stockQuantity: parseInt(formData.stockQuantity),
+      featured: formData.featured,
+      inStock: formData.inStock,
+      images: images,
+    };
+    
+    try {
+      // Update the product using our new function
+      const result = updateProduct(productId, productData);
+      
+      if (result) {
+        // Success! Show a success message if desired
+        console.log("Product updated successfully:", result);
+        
+        // Redirect to products page after successful submission
+        setTimeout(() => {
+          setIsSubmitting(false);
+          navigate("/admin/products", { state: { message: "Product updated successfully!" } });
+        }, 1000);
+      } else {
+        // Handle error case
+        setIsSubmitting(false);
+        setErrors({
+          form: "Failed to update product. Please try again."
+        });
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
       setIsSubmitting(false);
-      // Redirect to products page after successful submission
-      navigate("/admin/products");
-    }, 1500);
+      setErrors({
+        form: "An error occurred while updating the product."
+      });
+    }
   };
 
   if (!isLoaded) {

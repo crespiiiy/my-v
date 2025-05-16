@@ -1,14 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "./Logo";
 import CartIcon from "./CartIcon";
 import { useAuth } from "../contexts/AuthContext";
+import { useProductSync } from "../hooks/useProductSync";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isLoggedIn, user, logout, isAdmin } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Use our product sync hook to ensure products are synced with localStorage
+  useProductSync();
   
   const navLinks = [
     { name: "Home", path: "/" },
