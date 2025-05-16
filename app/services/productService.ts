@@ -58,6 +58,28 @@ export async function saveProduct(product: Product): Promise<boolean> {
     const docRef = doc(db, PRODUCTS_COLLECTION, product.id);
     await setDoc(docRef, product);
     
+    // Update local storage with this change as well
+    try {
+      const savedProductsStr = localStorage.getItem('creative_products');
+      if (savedProductsStr) {
+        const savedProducts = JSON.parse(savedProductsStr);
+        if (Array.isArray(savedProducts)) {
+          // Find and update the product
+          const index = savedProducts.findIndex(p => p.id === product.id);
+          if (index >= 0) {
+            savedProducts[index] = product;
+          } else {
+            savedProducts.push(product);
+          }
+          
+          // Save back to localStorage
+          localStorage.setItem('creative_products', JSON.stringify(savedProducts));
+        }
+      }
+    } catch (localStorageError) {
+      console.error('خطأ في تحديث التخزين المحلي:', localStorageError);
+    }
+    
     console.log(`تم حفظ المنتج بمعرف ${product.id} بنجاح`);
     return true;
   } catch (error) {

@@ -298,7 +298,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.1"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.2"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -306,13 +306,30 @@ try {
       console.log('Data version mismatch. Clearing cached products.');
       localStorage.removeItem('creative_products');
       localStorage.setItem('creative_products_version', CURRENT_DATA_VERSION);
+      
+      // Force immediate reload to apply changes
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     } else {
       // Only load from localStorage if version matches
       const savedProducts = localStorage.getItem('creative_products');
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-          products = parsedProducts;
+          // Make sure the courses (items 13-20) are up to date
+          const updatedProducts = parsedProducts.map(p => {
+            if (p.id >= "13" && p.id <= "20") {
+              // Find the corresponding course in the default array
+              const defaultCourse = products.find(dp => dp.id === p.id);
+              return defaultCourse || p;
+            }
+            return p;
+          });
+          products = updatedProducts;
+          
+          // Update localStorage with the merged data
+          localStorage.setItem('creative_products', JSON.stringify(products));
         }
       }
     }
@@ -446,11 +463,25 @@ export async function initializeFirebaseProducts() {
       const firebaseProducts = await getAllProducts();
       
       if (firebaseProducts && firebaseProducts.length > 0) {
-        // Update the products array with data from Firebase
-        products = firebaseProducts;
+        // Merge with default courses (items 13-20)
+        const updatedProducts = firebaseProducts.map(p => {
+          if (p.id >= "13" && p.id <= "20") {
+            // Find the corresponding course in the default array
+            const defaultCourse = products.find(dp => dp.id === p.id);
+            return defaultCourse || p;
+          }
+          return p;
+        });
+        
+        // Update the products array with merged data
+        products = updatedProducts;
+        
+        // Save updates back to Firebase to ensure courses are updated there too
+        await saveAllProducts(products);
         
         // Also update localStorage
         localStorage.setItem('creative_products', JSON.stringify(products));
+        localStorage.setItem('creative_products_version', "1.0.2");
       }
     }
     

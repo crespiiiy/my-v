@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { products, initializeFirebaseProducts } from '../models/product';
+import { products, initializeFirebaseProducts, resetCoursesToDefault } from '../models/product';
 
 /**
  * Hook to handle product synchronization between Firebase, localStorage and memory
@@ -15,7 +15,13 @@ export function useProductSync() {
         // Only run initialization once
         if (!isInitialized) {
           console.log('Initializing Firebase products');
+          
+          // First ensure course data is correct by applying default courses
+          await resetCoursesToDefault();
+          
+          // Then initialize from Firebase to get latest remote changes
           await initializeFirebaseProducts();
+          
           setIsInitialized(true);
         }
       } catch (error) {
