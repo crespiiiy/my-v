@@ -475,7 +475,7 @@ export let products: Product[] = [
   },
   // كورسات برمجة عالمية
   {
-    id: "11",
+    id: "101",
     name: "The Art of Mac Malware",
     description: "Unmask the secrets behind macOS exploitation. Think macOS is completely secure? This advanced and captivating course takes you deep into the world of Mac malware—how it's created, concealed, and detected. Whether you're a security researcher, tool developer, or cybersecurity enthusiast, this path is designed to sharpen your skills and reveal unseen aspects of macOS threats.",
     price: 94.99,
@@ -489,7 +489,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "12",
+    id: "102",
     name: "Android Malware",
     description: "Step into the dark world of Android hacking. In this course, you'll learn how malware is built, how hackers think, and how to reverse-engineer malicious apps like a pro. Master analysis tools, dynamic environments, and real-world evasion techniques used by advanced Android threats. If you're serious about cybersecurity — this is where your journey begins.",
     price: 89.99,
@@ -503,7 +503,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "13",
+    id: "103",
     name: "Certified Ethical Hacker (CEH) – EC-Council",
     description: "A comprehensive course by Nathan House covering all aspects of cybersecurity, from networking to secure browsing. Suitable for all levels, with high ratings from learners.",
     price: 109.99,
@@ -517,7 +517,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "14",
+    id: "104",
     name: "Cyber Security: From Zero to Hero",
     description: "Comprehensive cybersecurity course covering ethical hacking, penetration testing, network security, cryptography, and security best practices. Includes hands-on labs and real-world scenarios.",
     price: 84.99,
@@ -531,7 +531,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "15",
+    id: "105",
     name: "IBM Full Stack Software Developer – Coursera",
     description: "An all-in-one course by IBM preparing you to become a Full Stack Developer. It covers modern technologies like React, Node.js, and Cloud Native, making you job-ready in under 4 months. No prior experience required.",
     price: 89.99,
@@ -545,7 +545,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "16",
+    id: "106",
     name: "Quantum Cyber Warfare: Mastering AI-Driven Penetration Testing",
     description: "Learn the advanced techniques of AI-driven penetration testing and quantum cyber warfare. This cutting-edge course prepares you for the next generation of cybersecurity challenges.",
     price: 99.99,
@@ -559,7 +559,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "17",
+    id: "107",
     name: "Cyber Security: From Beginner to Expert – Udemy",
     description: "A comprehensive course starting from basics to advanced concepts in cybersecurity, covering topics like cyber attacks, malware analysis, and application security.",
     price: 119.99,
@@ -573,7 +573,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "18",
+    id: "108",
     name: "Advanced Backend Development with Node.js",
     description: "Comprehensive Node.js course for building scalable, secure backend systems. Covers Express.js, authentication, RESTful APIs, GraphQL, database integration, deployment, and more.",
     price: 124.99,
@@ -587,7 +587,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "19",
+    id: "109",
     name: "The Complete Cyber Security Course – Udemy (Nathan House)",
     description: "A comprehensive course by Nathan House covering all aspects of cybersecurity, from networking to secure browsing. Suitable for all levels, with high ratings from learners.",
     price: 94.99,
@@ -601,7 +601,7 @@ export let products: Product[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "20",
+    id: "110",
     name: "Advanced Backend Development with Node.js",
     description: "Comprehensive Node.js course for building scalable, secure backend systems. Covers Express.js, authentication, RESTful APIs, GraphQL, database integration, deployment, and more.",
     price: 89.99,
@@ -620,7 +620,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.2"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.3"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -639,9 +639,9 @@ try {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-          // Make sure the courses (items 13-20) are up to date
+          // Make sure the courses (items 101-110) are up to date
           const updatedProducts = parsedProducts.map(p => {
-            if (p.id >= "13" && p.id <= "20") {
+            if (p.id >= "101" && p.id <= "110") {
               // Find the corresponding course in the default array
               const defaultCourse = products.find(dp => dp.id === p.id);
               return defaultCourse || p;
@@ -731,8 +731,8 @@ export function updateProduct(id: string, updatedData: Partial<Product>): Produc
 
 // Reset all courses to match the ones defined in code
 export async function resetCoursesToDefault() {
-  // Default courses data for IDs 13-20
-  const defaultCourses = products.filter(p => p.id >= "13" && p.id <= "20");
+  // Default courses data for IDs 101-110
+  const defaultCourses = products.filter(p => p.id >= "101" && p.id <= "110");
   
   // Update localStorage with default courses
   try {
@@ -743,7 +743,7 @@ export async function resetCoursesToDefault() {
       
       // Replace courses in saved products
       savedProducts = savedProducts.map((p: Product) => {
-        if (p.id >= "13" && p.id <= "20") {
+        if (p.id >= "101" && p.id <= "110") {
           // Find the default course with the same ID
           const defaultCourse = defaultCourses.find(d => d.id === p.id);
           return defaultCourse || p;
@@ -753,7 +753,7 @@ export async function resetCoursesToDefault() {
       
       // Save updated products back to localStorage
       localStorage.setItem('creative_products', JSON.stringify(savedProducts));
-      localStorage.setItem('creative_products_version', "1.0.1");
+      localStorage.setItem('creative_products_version', "1.0.3");
       
       // Update in-memory products
       products = savedProducts;
@@ -785,9 +785,9 @@ export async function initializeFirebaseProducts() {
       const firebaseProducts = await getAllProducts();
       
       if (firebaseProducts && firebaseProducts.length > 0) {
-        // Merge with default courses (items 13-20)
+        // Merge with default courses (items 101-110)
         const updatedProducts = firebaseProducts.map(p => {
-          if (p.id >= "13" && p.id <= "20") {
+          if (p.id >= "101" && p.id <= "110") {
             // Find the corresponding course in the default array
             const defaultCourse = products.find(dp => dp.id === p.id);
             return defaultCourse || p;
@@ -803,7 +803,7 @@ export async function initializeFirebaseProducts() {
         
         // Also update localStorage
         localStorage.setItem('creative_products', JSON.stringify(products));
-        localStorage.setItem('creative_products_version', "1.0.2");
+        localStorage.setItem('creative_products_version', "1.0.3");
       }
     }
     
