@@ -142,61 +142,68 @@ export default function SyncProductsPage() {
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">خيارات المزامنة</h2>
         
-        <div className="mt-8 max-w-xl w-full grid grid-cols-1 gap-4">
-          <button
-            onClick={handleSyncFromFirebase}
-            disabled={isLoading}
-            className={`w-full p-4 text-white rounded-lg bg-blue-700 hover:bg-blue-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isLoading ? 'جاري المزامنة...' : 'مزامنة من Firebase'}
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-gray-700 p-6 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">مزامنة إلى Firebase</h3>
+            <p className="text-gray-300 mb-4">
+              تحديث قاعدة بيانات Firebase بالمنتجات المحلية الحالية.
+              استخدم هذا الخيار بعد إجراء تغييرات محلية ترغب في نشرها لجميع المستخدمين.
+            </p>
+            <button
+              onClick={handleSyncToFirebase}
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {isLoading ? <LoadingIndicator size="sm" /> : "مزامنة المنتجات إلى Firebase"}
+            </button>
+          </div>
           
-          <button
-            onClick={handleSyncToFirebase}
-            disabled={isLoading}
-            className={`w-full p-4 text-white rounded-lg bg-green-700 hover:bg-green-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isLoading ? 'جاري المزامنة...' : 'مزامنة إلى Firebase'}
-          </button>
+          <div className="bg-gray-700 p-6 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">مزامنة من Firebase</h3>
+            <p className="text-gray-300 mb-4">
+              تحديث المنتجات المحلية بالبيانات من Firebase.
+              استخدم هذا الخيار إذا قام مسؤول آخر بإجراء تغييرات وتريد الحصول على أحدث البيانات.
+            </p>
+            <button
+              onClick={handleSyncFromFirebase}
+              disabled={isLoading}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {isLoading ? <LoadingIndicator size="sm" /> : "تحديث المنتجات من Firebase"}
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gray-700 p-6 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">إعادة تعيين البيانات المحلية</h3>
+            <p className="text-gray-300 mb-4">
+              إعادة تعيين البيانات المحلية إلى الحالة الافتراضية المحددة في الكود.
+              استخدم هذا الخيار إذا كنت تريد التأكد من تحميل أحدث تغييرات الكود.
+            </p>
+            <button
+              onClick={handleResetLocalStorage}
+              disabled={isLoading}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {isLoading ? <LoadingIndicator size="sm" /> : "إعادة تعيين البيانات المحلية"}
+            </button>
+          </div>
           
-          <button
-            onClick={handleResetLocalStorage}
-            disabled={isLoading}
-            className={`w-full p-4 text-white rounded-lg bg-red-700 hover:bg-red-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isLoading ? 'جاري إعادة التعيين...' : 'إعادة تعيين البيانات المحلية'}
-          </button>
-          
-          <button
-            onClick={() => {
-              setIsLoading(true);
-              setMessage(null);
-              
-              try {
-                // Clear localStorage version to force refresh
-                localStorage.setItem('creative_products_version', "0");
-                
-                // Force page reload
-                window.location.reload();
-                
-                setMessage({
-                  text: "تم تحديث المنتجات المفقودة بنجاح!",
-                  type: "success"
-                });
-              } catch (error) {
-                console.error("Error fixing missing products:", error);
-                setMessage({
-                  text: `حدث خطأ أثناء إصلاح المنتجات المفقودة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`,
-                  type: "error"
-                });
-                setIsLoading(false);
-              }
-            }}
-            disabled={isLoading}
-            className={`w-full p-4 text-white rounded-lg bg-yellow-600 hover:bg-yellow-700 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isLoading ? 'جاري الإصلاح...' : 'إصلاح المنتجات المفقودة (27, 28, 30-33, 36)'}
-          </button>
+          <div className="bg-yellow-900 p-6 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">إعادة تعيين الكورسات فقط</h3>
+            <p className="text-gray-300 mb-4">
+              إعادة تعيين الكورسات (المنتجات 13-20) إلى البيانات المحددة في الكود مع الاحتفاظ بالمنتجات الأخرى.
+              استخدم هذا لتطبيق تحديثات الكورسات الجديدة.
+            </p>
+            <button
+              onClick={handleResetCourses}
+              disabled={isLoading}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {isLoading ? <LoadingIndicator size="sm" /> : "إعادة تعيين الكورسات فقط"}
+            </button>
+          </div>
         </div>
       </div>
       

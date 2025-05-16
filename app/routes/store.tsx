@@ -71,25 +71,6 @@ export default function Store() {
       return true;
     });
   }
-  // Use special handling for AI Models category too
-  else if (selectedCategory === "AI Models") {
-    filteredProducts = getProductsByCategory("AI Models").filter((product) => {
-      if (product.price < priceRange[0] || product.price > priceRange[1]) {
-        return false;
-      }
-      if (
-        searchQuery &&
-        !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      if (showDiscounted && product.originalPrice === undefined) {
-        return false;
-      }
-      return true;
-    });
-  }
   
   // Sort products based on selected option
   const sortedProducts = [...filteredProducts].sort((a, b) => {

@@ -620,7 +620,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.7"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.6"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -655,131 +655,6 @@ try {
   console.error('Error loading products from localStorage:', error);
 }
 
-// Ensure all critical products exist in the products array
-function ensureCriticalProductsExist() {
-  // IDs that need to be guaranteed in the array
-  const criticalIds = ["27", "28", "30", "31", "32", "33", "36"];
-  const existingIds = new Set(products.map(p => p.id));
-  const missingIds = criticalIds.filter(id => !existingIds.has(id));
-  
-  if (missingIds.length > 0) {
-    console.log(`Adding missing critical products: ${missingIds.join(', ')}`);
-    
-    // Define critical products that might be missing
-    const criticalProducts = [
-      {
-        id: "27",
-        name: "MacBook Pro M3 Max",
-        description: "Apple's most powerful laptop with M3 Max chip featuring 16-core CPU and 40-core GPU, 16-inch Liquid Retina XDR display, 64GB unified memory, and 2TB SSD storage. Perfect for developers and cybersecurity specialists.",
-        price: 3499.99,
-        originalPrice: 3699.99,
-        images: ["/images/products/macbook-pro-m3-max.jpg"],
-        category: "Laptops",
-        featured: true,
-        inStock: true,
-        stockQuantity: 10,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "28",
-        name: "MacBook Pro M3 Pro",
-        description: "Apple's premium laptop with M3 Pro chip featuring 12-core CPU and 18-core GPU, 14-inch Liquid Retina XDR display, 32GB unified memory, and 1TB SSD storage.",
-        price: 2499.99,
-        images: ["/images/products/macbook-pro-m3-pro.jpg"],
-        category: "Laptops",
-        featured: false,
-        inStock: true,
-        stockQuantity: 15,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "30",
-        name: "ThinkPad X1 Extreme",
-        description: "Laptop specialized for cybersecurity with 13th Gen Intel Core i9 processor, NVIDIA RTX 4070 graphics, 32GB upgradable RAM, and 1TB SSD. Comes with dual-boot Windows/Linux operating system.",
-        price: 2499.99,
-        originalPrice: 2799.99,
-        images: ["/images/products/thinkpad-x1-extreme.jpg"],
-        category: "Laptops",
-        featured: true,
-        inStock: true,
-        stockQuantity: 12,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "31",
-        name: "Dell XPS 17",
-        description: "Powerful developer laptop with 17-inch 4K display, Intel Core i9 processor, NVIDIA RTX 4080 graphics, 64GB RAM, and 2TB SSD. Perfect for advanced development and penetration testing.",
-        price: 2799.99,
-        images: ["/images/products/dell-xps-17.jpg"],
-        category: "Laptops",
-        featured: false,
-        inStock: true,
-        stockQuantity: 8,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "32",
-        name: "MSI Titan GT77",
-        description: "The most powerful laptop for gaming and cybersecurity tasks with Intel Core i9 HX processor, NVIDIA RTX 4090 graphics, 128GB RAM, and 4TB SSD. Advanced cooling system and 4K display with 144Hz refresh rate.",
-        price: 3999.99,
-        originalPrice: 4299.99,
-        images: ["/images/products/msi-titan-gt77.jpg"],
-        category: "Laptops",
-        featured: true,
-        inStock: true,
-        stockQuantity: 5,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "33",
-        name: "Razer Blade 17",
-        description: "Elegant laptop for developers and penetration testers with Intel Core i7 processor, NVIDIA RTX 4070 graphics, 32GB RAM, and 1TB SSD. Features a sleek metal design and QHD display with 240Hz refresh rate.",
-        price: 2399.99,
-        images: ["/images/products/razer-blade-17.jpg"],
-        category: "Laptops",
-        featured: false,
-        inStock: true,
-        stockQuantity: 10,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: "36",
-        name: "WormGPT Enterprise",
-        description: "Professional version of WormGPT with unlimited capabilities and integration with penetration testing tools. Features exceptional accuracy in generating advanced code, creating complex attack scenarios, and simulating attacker behavior. Annual subscription with customized training.",
-        price: 2499.99,
-        originalPrice: 2999.99,
-        images: ["/images/products/wormgpt-enterprise.jpg"],
-        category: "AI Models",
-        featured: true,
-        inStock: true,
-        stockQuantity: 3,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    ];
-    
-    // Add only the missing products
-    const productsToAdd = criticalProducts.filter(p => missingIds.includes(p.id));
-    products = [...products, ...productsToAdd];
-    
-    // Update localStorage
-    try {
-      localStorage.setItem('creative_products', JSON.stringify(products));
-    } catch (error) {
-      console.error('Error saving critical products to localStorage:', error);
-    }
-  }
-}
-
-// Run the check to ensure critical products exist
-ensureCriticalProductsExist();
-
 // Helper functions for product operations
 export function getProductById(id: string): Product | undefined {
   return products.find(product => product.id === id);
@@ -799,7 +674,7 @@ export function getProductsByCategory(category: string): Product[] {
   console.log(`Found ${categoryProducts.length} products in category ${category}`);
   console.log('Category products IDs:', categoryProducts.map(p => p.id).join(', '));
   
-  // Special handling for Laptops category
+  // Special handling for Laptops category to ensure it shows all laptop products
   if (category === "Laptops") {
     // Get the initial array of laptops as defined in the code
     const originalLaptops = [
@@ -821,9 +696,27 @@ export function getProductsByCategory(category: string): Product[] {
     
     console.log('Missing laptop IDs:', missingLaptopIds.join(', '));
     
-    // If any laptops are missing, add them directly from the hardcoded definitions
+    // If any laptops are missing, fetch them directly from the original products array
     if (missingLaptopIds.length > 0) {
-      const hardcodedLaptops = [
+      // Use the default products array definition
+      const defaultProductsArray = [
+        // RAT Tools
+        {
+          id: "1",
+          name: "DarkComet RAT",
+          description: "A powerful remote access tool designed for educational and security testing purposes. Features an easy-to-use interface and multiple system control capabilities. Ideal for cybersecurity professionals learning how to protect systems from vulnerabilities.",
+          price: 299.99,
+          images: ["/images/products/rat-1.jpg"],
+          category: "RAT Tools",
+          featured: true,
+          inStock: true,
+          stockQuantity: 50,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        // ... other products
+        
+        // Laptops
         {
           id: "27",
           name: "MacBook Pro M3 Max",
@@ -935,34 +828,15 @@ export function getProductsByCategory(category: string): Product[] {
         }
       ];
       
-      // Add only the missing laptops
-      const missingLaptops = hardcodedLaptops.filter(laptop => missingLaptopIds.includes(laptop.id));
-      console.log(`Found ${missingLaptops.length} missing laptops in hardcoded definitions`);
+      // Find the missing laptops from the default array
+      const missingLaptops = defaultProductsArray.filter(p => 
+        missingLaptopIds.includes(p.id) && p.category === "Laptops"
+      );
       
+      console.log(`Found ${missingLaptops.length} missing laptops in default array`);
+      
+      // Add the missing laptops to the result
       return [...categoryProducts, ...missingLaptops];
-    }
-  } 
-  // Special handling for AI Models category
-  else if (category === "AI Models") {
-    // Check if product id 36 is missing
-    if (!categoryProducts.some(p => p.id === "36")) {
-      const wormGPTEnterprise = {
-        id: "36",
-        name: "WormGPT Enterprise",
-        description: "Professional version of WormGPT with unlimited capabilities and integration with penetration testing tools. Features exceptional accuracy in generating advanced code, creating complex attack scenarios, and simulating attacker behavior. Annual subscription with customized training.",
-        price: 2499.99,
-        originalPrice: 2999.99,
-        images: ["/images/products/wormgpt-enterprise.jpg"],
-        category: "AI Models",
-        featured: true,
-        inStock: true,
-        stockQuantity: 3,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      console.log("Adding missing AI Models product id 36");
-      return [...categoryProducts, wormGPTEnterprise];
     }
   }
   
