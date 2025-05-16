@@ -9,37 +9,6 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Bio() {
-  const teamMembers = [
-    {
-      id: 1,
-      name: "Alex Johnson",
-      role: "Founder & CEO",
-      bio: "Alex has over 15 years of experience in creative design and marketing. He founded Creative with the vision of helping businesses stand out through high-quality creative solutions.",
-      image: "https://placehold.co/300x300/111827/ffffff?text=AJ",
-    },
-    {
-      id: 2,
-      name: "Sarah Williams",
-      role: "Creative Director",
-      bio: "With a background in fine arts and digital design, Sarah brings a unique perspective to every project. She leads our creative team with passion and innovation.",
-      image: "https://placehold.co/300x300/111827/ffffff?text=SW",
-    },
-    {
-      id: 3,
-      name: "Michael Chen",
-      role: "Lead Photographer",
-      bio: "Michael's eye for detail and composition has earned him recognition in the photography industry. He specializes in product and commercial photography.",
-      image: "https://placehold.co/300x300/111827/ffffff?text=MC",
-    },
-    {
-      id: 4,
-      name: "Emily Rodriguez",
-      role: "Web Development Lead",
-      bio: "Emily combines technical expertise with creative flair to build websites that are both beautiful and functional. She has over 8 years of experience in web development.",
-      image: "https://placehold.co/300x300/111827/ffffff?text=ER",
-    },
-  ];
-
   return (
     <div>
       {/* Hero Section */}
@@ -118,27 +87,6 @@ export default function Bio() {
               We believe in the power of collaboration, working closely with our clients and each other to achieve the best results.
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Our Team */}
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold mb-8">Meet Our Team</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {teamMembers.map((member) => (
-            <div key={member.id} className="bg-gray-800 rounded-lg overflow-hidden">
-              <img
-                src={member.image}
-                alt={member.name}
-                className="w-full h-auto aspect-square object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-1">{member.name}</h3>
-                <p className="text-blue-400 mb-4">{member.role}</p>
-                <p className="text-gray-400">{member.bio}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
