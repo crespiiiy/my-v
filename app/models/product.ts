@@ -284,7 +284,7 @@ export let products: Product[] = [
     description: "Comprehensive Node.js course for building scalable, secure backend systems. Covers Express.js, authentication, RESTful APIs, GraphQL, database integration, deployment, and more.",
     price: 89.99,
     originalPrice: 169.99,
-    images: ["/images/products/product-7.jpg"],
+    images: ["/images/courses/course8.png"],
     category: "Courses",
     featured: false,
     inStock: true,

@@ -45,6 +45,7 @@ const componentImports: Record<string, () => Promise<any>> = {
   "routes/admin/orders": () => import("./routes/admin/orders"),
   "routes/admin/customers": () => import("./routes/admin/customers"),
   "routes/admin/settings": () => import("./routes/admin/settings"),
+  "routes/admin/sync-products": () => import("./routes/admin/sync-products"),
   "routes/privacy-policy": () => import("./routes/privacy-policy"),
   "routes/terms-of-service": () => import("./routes/terms-of-service"),
   "routes/refund-policy": () => import("./routes/refund-policy"),
@@ -134,6 +135,7 @@ const rootRoute = {
     createRoute("admin/orders", "routes/admin/orders"),
     createRoute("admin/customers", "routes/admin/customers"),
     createRoute("admin/settings", "routes/admin/settings"),
+    createRoute("admin/sync-products", "routes/admin/sync-products"),
   ]
 };
 

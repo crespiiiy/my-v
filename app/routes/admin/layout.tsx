@@ -12,6 +12,7 @@ export default function AdminLayout() {
     { name: "Orders", path: "/admin/orders" },
     { name: "Customers", path: "/admin/customers" },
     { name: "Store Settings", path: "/admin/settings" },
+    { name: "Sync Products", path: "/admin/sync-products" },
   ];
 
   // إضافة رابط إعدادات المسؤول فقط للمسؤولين
