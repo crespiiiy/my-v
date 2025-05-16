@@ -620,7 +620,7 @@ export let products: Product[] = [
 try {
   if (typeof window !== 'undefined') {
     // Add a version check to force refresh on update
-    const CURRENT_DATA_VERSION = "1.0.5"; // Increment this when making data changes
+    const CURRENT_DATA_VERSION = "1.0.6"; // Increment this when making data changes
     const savedVersion = localStorage.getItem('creative_products_version');
     
     // If version mismatch, clear localStorage to force refresh
@@ -639,19 +639,13 @@ try {
       if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
         if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-          // Get the current default products (as a source of truth)
-          const defaultLaptops = products.filter(p => p.category === "Laptops");
-          const defaultCourses = products.filter(p => p.category === "Courses");
-          
-          // Create a map of saved products excluding laptops and courses
-          const nonLaptopCourseProducts = parsedProducts.filter(
-            p => p.category !== "Laptops" && p.category !== "Courses"
-          );
-          
-          // Combine everything back together
-          products = [...nonLaptopCourseProducts, ...defaultLaptops, ...defaultCourses];
-          
-          // Update localStorage with the merged data
+          // دمج المنتجات الأصلية مع المحفوظة بدون حذف أي منتج أصلي
+          const originalIds = new Set(products.map(p => p.id));
+          const mergedProducts = [
+            ...products,
+            ...parsedProducts.filter(p => !originalIds.has(p.id))
+          ];
+          products = mergedProducts;
           localStorage.setItem('creative_products', JSON.stringify(products));
         }
       }
